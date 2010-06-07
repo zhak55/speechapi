@@ -1,0 +1,37 @@
+<project name="flashspeak" basedir="." default="compile">
+
+   <property environment="env" />
+   <property file="${basedir}/${user.name}.properties" />
+   <property file="${user.home}/build.properties" />
+   <property file="${basedir}/build.properties" />
+   <property name="FLEX_HOME" value="${flex.home}"/> 
+   <property name="as3_core" value="${as3.core.lib}"/> 
+   <property name="js.dir" value="${basedir}/src/javascript"/> 
+
+    <taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" /> 
+    <target name="flash">
+	    <mxmlc file="${basedir}/src/flash/speechapi.mxml" keep-generated-actionscript="true">
+             <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <source-path path-element="${FLEX_HOME}/frameworks"/>
+	    <source-path path-element="${as3_core}"/>
+        </mxmlc>
+   </target>
+
+
+   <target name="concat-js">
+	   <concat destfile="${js.dir}/gen/speechapi-all.js"
+             force="no">
+         <filelist dir="${js.dir}"
+		 files="thirdparty/swfobject.js, speechapi.js"/>
+     </concat>
+   </target>
+
+
+    <target name="air">
+        <mxmlc file="httpspeechair.mxml" keep-generated-actionscript="true">
+            <load-config filename="${FLEX_HOME}/frameworks/air-config.xml"/>
+            <source-path path-element="${FLEX_HOME}/frameworks"/>
+        </mxmlc>
+    </target>
+
+</project>
