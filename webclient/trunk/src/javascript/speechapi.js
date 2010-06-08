@@ -34,6 +34,8 @@ var speechapi = {
 	server: null,
 	automatic: false,
 	initNotCalled: true,
+	ruleIndex : 1,
+	grammars : {},
 
 	setup: function(username, password, result, tts, onLoaded, containerID) {
 		speechapi.username = username;
@@ -160,6 +162,59 @@ var speechapi = {
 
 	speak: function(text, speaker) {
 		document.getElementById(speechapi.containerID).speak(text, speaker);
-	} 
+	},
+
+
+
+	processRule: function(rulename, tag) {
+		if (speechapi.grammars[rulename]) {
+			speechapi.grammars[rulename].callback(speechapi.grammars[rulename].text, tag);
+		} else {
+			alert("unhandled rulename/tag "+rulename+"/"+tag);
+		}
+	},
+
+
+	resetGrammar: function() {
+		speechapi.grammars = {};
+	},
+
+	// similar to Array.join() but joins the keys of an
+	// associative array instead of the array values
+	joinKeys: function(map, separator) {
+		var result = "";
+		var count = 0;
+
+		for (var x in map) {
+			if (count++ > 0)
+				result += separator;
+			result += x;
+		}
+
+		return result;
+	},
+
+	constructGrammar: function() {
+		var grammar = "#JSGF V1.0;\n";
+		grammar += "grammar mashup;\n";
+
+		//grammar += "public <command> = [<pre>] (<";
+		grammar += "public <command> =  (<";
+		grammar += speechapi.joinKeys(speechapi.grammars, "> | <");
+		grammar += ">);\n";
+
+		for (var rulename in speechapi.grammars) {
+			grammar += ( "<" + rulename + "> = " + speechapi.grammars[rulename].text + ";\n" );
+		}
+		//alert(grammar);
+		return grammar;
+	},
+
+	addJsgfGrammar: function(text, callback) {
+		var rulename = 'id' + speechapi.ruleIndex++;
+		speechapi.grammars[rulename] = {"text" : text, "callback" : callback};
+		return rulename;
+	}
+
 };
 
