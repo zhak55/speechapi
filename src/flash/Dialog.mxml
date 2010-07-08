@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dialog.mxml -->
+<mx:Application  xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()" width="215" height="138"  backgroundColor="white" xmlns:controls="controls.*" xmlns:local="*">
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;
+			
+			private function close():void {
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:String id="info" />
+	<mx:Label text="Click and Speak" x="0" y="51"/>
+	<mx:Label text="Links" x="0" y="30"/>
+	<mx:Label text="Focus (requires tags)" x="0" y="80"/>
+	<mx:Label text="Forms (requires tags)" x="0" y="98"/>
+	<mx:Label text="Browser scrolling/sizing" x="0" y="116"/>
+	<mx:HRule x="0" y="76" width="205"/>
+	<mx:RadioButtonGroup id="clickandspeak"/>
+	<mx:RadioButton x="106" y="34" groupName="clickandspeak"/>
+	<mx:RadioButton x="106" y="53" groupName="clickandspeak"/>
+	<mx:RadioButtonGroup id="links"/>
+	<mx:RadioButton x="140" y="34" groupName="links"/>
+	<mx:RadioButton x="140" y="53" groupName="links"/>
+	<mx:Label x="98" y="4" text="Use"/>
+	<mx:Label x="98" y="17" text="Tags"/>
+	<mx:Label x="137" y="4" text="Try Best"/>
+	<mx:Label x="137" y="17" text="Guess"/>
+	<mx:Text x="155" y="53" text="p,h1,h2,h3" width="55" fontSize="10"/>
+	<mx:Label x="166" y="37" text="Hints"/>
+	<mx:CheckBox x="134" y="82"/>
+	<mx:CheckBox x="134" y="99"/>
+	<mx:CheckBox x="134" y="116"/>
+	<mx:Button x="155" y="111" label="Cancel" width="58" click="close()"/>
+	<mx:Button x="155" y="85" label="OK" width="58" click="close()"/>
+	
+</mx:Application>
