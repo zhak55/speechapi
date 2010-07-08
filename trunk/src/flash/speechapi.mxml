@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application  xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()" width="215" height="138"  backgroundColor="white" xmlns:controls="controls.*" xmlns:local="*">
+	<mx:Script>
+		<![CDATA[
+			import com.adobe.serialization.json.JSON;
+			import flash.display.*;
+			import flash.display.MovieClip;
+			import flash.display.SimpleButton;
+			import flash.events.AsyncErrorEvent;
+			import flash.events.NetStatusEvent;
+			import flash.external.*;
+			import flash.media.Camera;
+			import flash.media.Microphone;
+			import flash.media.Video;
+			import flash.net.NetConnection;
+			import flash.net.NetStream;
+			import flash.net.Responder;
+			import flash.system.Security;
+			import flash.system.SecurityDomain;
+			import flash.text.*;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.managers.PopUpManager;
+			import flash.events.ActivityEvent;
+			import flash.events.Event;
+			import flash.events.StatusEvent;
+
+			/*
+ 			* speechapi - Flash frontend for use in on-line speech-to-text and text-to-speech.
+ 			*
+ 			* Copyright (C) 20010 Speechapi - http://www.speechapi.com
+ 			*
+ 			* This program is free software; you can redistribute it and/or modify
+ 			* it under the terms of the GNU General Public License as published by
+ 			* the Free Software Foundation; either version 2 of the License, or
+ 			* (at your option) any later version.
+ 			*
+ 			* This program is distributed in the hope that it will be useful,
+ 			* but WITHOUT ANY WARRANTY; without even the implied warranty of
+ 			* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ 			* GNU General Public License for more details.
+ 			*
+ 			* You should have received a copy of the GNU General Public License
+ 			* along with this program; if not, write to the Free Software
+ 			* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ 			*
+ 			* Contact: support@speechapi.com
+ 			*
+ 			*/
+
+			Security.allowDomain("*");		
+			
+			//********************************red5 vars************
+			private var nc:NetConnection;	
+			private var ns:NetStream;
+			private var ns2:NetStream;
+			private var mic:Microphone = Microphone.getMicrophone();
+			private var recognizerReady:Boolean = true;
+			private var streamName:String = "";
+			private var mousedown:Boolean = false;
+			private var level:Sprite;
+			private var bOnce:Boolean = true;
+			private var speechTimer:Timer; // 1 second
+			private var lowestLevel:int=100;
+			//********************************callbacks************
+			private var speakResponder:Responder;	
+			private var streamNameResponder:Responder;		
+			private var responder:Responder;
+			private var fileresponder:Responder;
+			//********************************js vars******************
+			private var username:String = null;
+			private var password:String = null;
+			private var onresult = null;
+			private var ontts = null;
+			private var vxmlCallback = null;
+
+			private var automatic:Boolean = false;
+			private var speechServer:String =null;
+			private var grammar={'Text':'','Type':'simple'}	
+
+			//***************************************************
+			//*******************js->flex************************
+			//***************************************************
+			public function setupRecognition(gType, grammar, auto):void
+			{
+				var credentials:Array = new Array();
+				credentials[0]=username;
+				credentials[1]=password;
+				var grammarArray:Array = new Array();
+				grammarArray[0]=grammar;
+				grammarArray[1]=gType;
+				this.automatic=auto;
+				nc.call("initializeSettings", null, credentials, grammarArray, auto, streamName);			
+				if(automatic)
+				{
+					automatic=true;
+					startRecognition()
+				}
+			}
+			public function startRecognition():void
+			{
+				if(recognizerReady)
+				{
+					nc.call("startRecognition", null, streamName, false);
+					mousedown=true;
+					display();
+					speechTimer = new Timer(15000, 1);
+					speechTimer.addEventListener(TimerEvent.TIMER, runOnce);
+					speechTimer.start();
+				}
+			}
+			public function stopRecognition():void
+			{
+				if(recognizerReady)
+				{
+					nc.call("stopRecognition", null, streamName);
+					mousedown=false;
+					display();
+					speechTimer.stop();
+				}
+			}
+			public  function speak(text, speaker):void
+			{			
+				nc.call("speak", speakResponder,streamName, text, speaker);
+			}
+
+
+			public function startVxmlAppUrl(vurl,callback):void
+			{
+				this.vxmlCallback = callback;
+				nc.call("startVxmlAppUrl", null, streamName, vurl);
+			}
+			
+			public function startVxmlAppText(vxml,callback):void
+			{
+				this.vxmlCallback = callback;
+				nc.call("startVxmlAppText", null, streamName, vxml);
+			}
+			
+			public function stopVxmlApp():void
+			{
+				Alert.show("stopping vxml app");
+				nc.call("stopVxmlApp", null, streamName );
+			}
+			public function sendDtmf(dtmf):void
+			{
+				Alert.show(dtmf);
+				nc.call("sendDtmf", null, streamName, dtmf);
+			}
+
+
+			//****************************************************
+			//*******************CALLBACKS************************
+			//****************************************************
+			private function mouseDown(event:Event):void
+			{
+				if(automatic==false)
+				{
+					mousedown=true;
+					startRecognition();
+				}
+			}
+			private function mouseUp(event:Event):void
+			{
+				if(automatic==false)
+				{
+					mousedown=false;
+					stopRecognition();
+				}
+			}
+			function runOnce(event:TimerEvent):void 
+			{
+				stopRecognition();
+			}					
+			public function initFS(username,password,onresult,ontts):void
+			{
+			
+				this.username=username;
+				this.password=password;
+				this.onresult=onresult;
+				this.ontts=ontts;
+			}
+			//*******************************************************************************************************
+			// These methods are invoked from the Red5 RTMP server.  They either take some action upon the netstream
+			// or call the js code using ExternalInterface.call() method
+			//*******************************************************************************************************
+			public function flashReady():void
+			{
+				if (ExternalInterface.available)
+				{
+					ExternalInterface.call("flashReady");
+				}
+			}
+			public  function playAudio(filename):void
+			{
+				if (ns2 == null)
+				{
+					ns2 = new NetStream(nc);       
+					ns2.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
+					ns2.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
+				}
+				ns2.play("mp3:" + filename);
+			}
+			public function passResults(result:String)
+			{
+				var resultObj:Object = JSON.decode(result) ;
+				if (resultObj.rCode != "Success") {
+				      resultObj.text = "Recognition Error";
+				}
+				ExternalInterface.call(onresult, resultObj); 
+				resultText.text=resultObj.text;
+			}	
+			private function netStatusHandler(e:NetStatusEvent):void
+			{    
+				var code:String = e.info.code;
+				if(code == "NetStream.Buffer.Empty")
+				{
+					ExternalInterface.call(ontts); 	
+				}
+				else if(code == "NetConnection.Connect.Success")
+				{  
+					ns = new NetStream(nc);        //plus other stuff if you need.
+					ns.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
+				}  
+				else
+				{
+					trace(code);
+				}
+			}
+			public  function speakResult(message):void
+			{
+				if (ns2 == null)
+				{
+					ns2 = new NetStream(nc);       
+					ns2.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
+					ns2.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
+					//var customClient:Object = new Object();
+				}
+				ns2.play("mp3:" + message);
+			}
+			public  function stopSpeaking():void
+			{
+				if (ns2 != null)
+				{
+					ns2.close();
+				}
+			}
+			public  function vxmlComplete(app,status):void
+			{
+					ExternalInterface.call(vxmlCallback,app,status); 	
+			}
+			//***********************************************************************************************************
+			//  these methods are called at startup time to acces the mic, initialize streams and connections to server.
+			//***********************************************************************************************************
+			private function init():void
+			{
+				this.speechServer = this.parameters.speechServer;
+				connect();
+			}
+			private function connect():void
+			{
+				nc = new NetConnection();
+				nc.client=this;
+				nc.connect(this.speechServer);
+				nc.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
+				fileresponder = new Responder(null, null);
+				speakResponder = new Responder(speakResult, null);
+				streamNameResponder = new Responder(streamNameResult, null);
+				nc.call("getStreamName", streamNameResponder);
+			}
+			public function streamPublishCam(streamName):void
+			{
+				level = new Sprite();
+				level.y = 0;
+				level.x = 0;
+				myUIComponent.addChild(level);
+				try
+				{
+					mic.rate = 8;
+					mic.gain=80;
+					mic.addEventListener(ActivityEvent.ACTIVITY, activity);
+					mic.setLoopBack(true);
+					mic.setSilenceLevel(10,1000);
+					mic.addEventListener(StatusEvent.STATUS, status);
+					mic.addEventListener(Event.ACTIVATE, active);
+					mic.addEventListener(Event.ENTER_FRAME, updateVolLevel);
+					mic.setUseEchoSuppression(true);
+					var tf:SoundTransform = new SoundTransform(0);
+					mic.soundTransform = tf;
+					ns.attachAudio(mic);
+					ns.publish(streamName, "live");	
+				} 
+				catch(err:Error)
+				{ 
+					Alert.show( err.toString() ); 
+				}
+			}
+			public function streamNameResult(message):void
+			{
+				streamName = message;
+				streamPublishCam(message);
+
+				if (ExternalInterface.available)
+			       	{
+			               ExternalInterface.addCallback("initFS", initFS);
+        			       ExternalInterface.addCallback("setupRecognition", setupRecognition);
+        			       ExternalInterface.addCallback("startRecognition", startRecognition);
+        			       ExternalInterface.addCallback("stopRecognition", stopRecognition);
+       				       ExternalInterface.addCallback("speak", speak);
+       				       ExternalInterface.addCallback("startVxmlAppUrl", startVxmlAppUrl);
+        			       ExternalInterface.addCallback("startVxmlAppText", startVxmlAppText);
+
+			               ExternalInterface.call("speechapi.loaded");
+			       	}
+			       	else
+			      	{
+              				 setTimeout(streamNameResult, 500, message);
+				}
+
+				
+			}	
+			//***********************************************************************
+			// User Interface methods.
+			//***********************************************************************
+			public function display()
+			{
+				if(mousedown)
+				{
+					talk.label="Release to Finish";
+				}
+				else
+				{
+					talk.label="Press to Speak Button";
+				}
+			}
+			public function updateVolLevel(event:Event):void
+			{
+				return;
+			} 
+			private function automaticClicked():void
+			{
+				if(automaticCheckBox.selected)
+				{
+					automatic=true;
+					talk.enabled=false;
+					startRecognition();
+				}
+				else
+				{
+					automatic=false;
+					talk.enabled=true;
+				}
+			}
+			private function launchMoreInfo():void 
+			{
+				var win:Dialog = PopUpManager.createPopUp(this, Dialog, true) as Dialog;
+				PopUpManager.centerPopUp(win);
+			}
+			//***********************************************************************	
+			//************************Events*****************************************
+			//***********************************************************************	
+			function asyncErrorHandler(event:AsyncErrorEvent):void 
+			{
+				trace(event.text);
+			}
+			private function soundCompleteHandler(event:Event):void 
+			{
+				var position = 0;
+			}    
+
+			//The reason for bOnce is to allow the user to remember their response (not need to click allow) and not crash
+			private function active(event:Event):void
+			{
+				if(bOnce)
+				{
+					trace(' active ');
+					bOnce=false;
+					ExternalInterface.call("TheSettings");
+				}
+			}
+			private function status(event:StatusEvent):void
+			{
+				trace("status");
+				if(bOnce)
+				{
+					bOnce=false;
+					ExternalInterface.call("TheSettings");
+				}
+			}
+			private function activity(event:ActivityEvent):void
+			{
+				if(lowestLevel > mic.activityLevel)
+					lowestLevel = mic.activityLevel;
+				level.graphics.clear();
+				level.graphics.beginFill(0xccccff, 1);
+				level.graphics.drawRect(0, 0, (mic.activityLevel * 2), 20);
+				level.graphics.endFill();
+				log.text=mic.activityLevel.toString();
+				trace("active ");
+				addEventListener(Event.ENTER_FRAME, updateVolLevel);
+				if(bOnce)
+				{
+					trace(' active ');
+					bOnce=false;
+					ExternalInterface.call("TheSettings");
+				}
+				if(automatic)
+				{
+					if(event.activating)
+					{
+						startRecognition();
+					}
+					else
+					{
+						stopRecognition();
+					}
+				}
+			}
+			public function onBWDone():void 
+			{
+				//necessary red5 method
+			}
+		]]>
+	</mx:Script>
+	<mx:Style source= "main.css"/>
+	
+	<mx:Canvas visible="true" id="square" width="215" height="138">
+		<mx:UIComponent id="myUIComponent" x="0" y="0" width="215" height="138" ></mx:UIComponent>
+		<mx:Label x="4" y="67" text="You Said:"/>
+		<mx:HRule y="20" width="215" chromeColor="#000000" x="0"/>
+		<mx:HRule y="0" width="215" chromeColor="#000000" x="0"/>
+		<mx:HRule y="136" width="215" chromeColor="#000000" x="0"/>
+		<mx:HRule x="0" y="118" width="215" chromeColor="#000000"/>
+		<mx:TextInput x="69" y="64" width="132" id="resultText"/>
+		<mx:LinkButton x="40" y="117" label="www.speechapi.com" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
+		<mx:RadioButtonGroup id="radiogroup1"/>
+		<local:CustomButton id="talk"
+			mouseDown="mouseDown(event)" mouseUp="mouseUp(event)"  width="195"  x="6" y="30" height="29" chromeColor="#FFFF00"
+			label        = "Press to Speak Button" />
+		<mx:CheckBox x="6" y="92" label="Automatic" id="automaticCheckBox" click="automaticClicked()"/>
+		<mx:Label x="10" y="-3" text="debug" width="195" id="log" visible="false"/>
+		<mx:VRule x="0" y="0" height="138"/>
+		<mx:VRule x="213" y="0" height="138"/>
+		<mx:Button x="116" y="91" label="Preferences" click="launchMoreInfo()" visible="false" enabled="false"/>
+	</mx:Canvas>
+</mx:Application>
