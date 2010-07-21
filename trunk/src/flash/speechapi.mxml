@@ -24,6 +24,8 @@
 			import flash.events.ActivityEvent;
 			import flash.events.Event;
 			import flash.events.StatusEvent;
+			import org.osflash.thunderbolt.Logger;
+
 
 			/*
  			* speechapi - Flash frontend for use in on-line speech-to-text and text-to-speech.
@@ -48,7 +50,8 @@
  			*
  			*/
 
-			Security.allowDomain("*");		
+			Security.allowDomain("*");	
+			
 			
 			//********************************red5 vars************
 			private var nc:NetConnection;	
@@ -77,6 +80,14 @@
 			private var automatic:Boolean = false;
 			private var speechServer:String =null;
 			private var grammar={'Text':'','Type':'simple'}	
+
+			//-------------------------------------------
+			//Examples using Firebug.console Logger
+			//-------------------------------------------
+			//Logger.about();
+			//var myString: String = "Lorem ipsum";
+			//Logger.info("Flex is calling: A simple string",myString); 
+			//-------------------------------------------
 
 			//***************************************************
 			//*******************js->flex************************
@@ -147,6 +158,14 @@
 				Alert.show(dtmf);
 				nc.call("sendDtmf", null, streamName, dtmf);
 			}
+			public function initFS(username,password,onresult,ontts):void
+			{
+			
+				this.username=username;
+				this.password=password;
+				this.onresult=onresult;
+				this.ontts=ontts;
+			}
 
 
 			//****************************************************
@@ -172,14 +191,6 @@
 			{
 				stopRecognition();
 			}					
-			public function initFS(username,password,onresult,ontts):void
-			{
-			
-				this.username=username;
-				this.password=password;
-				this.onresult=onresult;
-				this.ontts=ontts;
-			}
 			//*******************************************************************************************************
 			// These methods are invoked from the Red5 RTMP server.  They either take some action upon the netstream
 			// or call the js code using ExternalInterface.call() method
@@ -254,6 +265,7 @@
 			//***********************************************************************************************************
 			private function init():void
 			{
+			
 				this.speechServer = this.parameters.speechServer;
 				connect();
 			}
@@ -310,7 +322,7 @@
        				       ExternalInterface.addCallback("startVxmlAppUrl", startVxmlAppUrl);
         			       ExternalInterface.addCallback("startVxmlAppText", startVxmlAppText);
 
-			               ExternalInterface.call("speechapi.loaded");
+				       ExternalInterface.call("speechapi.loaded");
 			       	}
 			       	else
 			      	{
