@@ -31,7 +31,9 @@
 	function onFinishTTS() {
 		//alert("finishTTS");
 	}
-
+	function ResetGrammar() {
+		speechapi.setupRecognition("SIMPLE", document.getElementById('words').value,false);
+	}	
 </script>
 
 </head>
@@ -46,7 +48,7 @@ by modifying the comma separated list in the text entry field.</p>
 <table border="1" width=>
 <tr>
   <td>Words</td>
-  <td><input type="text" id="words" value="one,two,three,four,five,six,seven,eight,nine,ten" size="100"/></td>
+  <td><input type="text" id="words" value="one,two,three,four,five,six,seven,eight,nine,ten" size="100"/><input type="button" value="Reset Grammar" onclick="ResetGrammar()"></td>
 </tr>
 <tr>
   <td>RESULT</td>
