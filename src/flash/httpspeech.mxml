@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<mx:Application  xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()" width="215" height="138"  backgroundColor="white" xmlns:controls="controls.*" xmlns:local="*">
+
+	<mx:Script>
+	<![CDATA[
+	import mx.core.UIComponent;
+	import mx.managers.PopUpManager;
+	import flash.display.Sprite;
+	import flash.external.ExternalInterface;
+	import com.spokentech.HttpSpeech;
+        import flash.system.SecurityDomain;
+	import flash.system.Security;
+	import flash.media.Microphone;
+	import com.adobe.serialization.json.JSON;
+	import org.osflash.thunderbolt.Logger;
+	
+
+	/*
+ 	* speechapi - Flash frontend for use in on-line speech-to-text and text-to-speech.
+ 	*
+ 	* Copyright (C) 20010 Spencer Lord
+ 	*
+ 	* This program is free software; you can redistribute it and/or modify
+ 	* it under the terms of the GNU General Public License as published by
+ 	* the Free Software Foundation; either version 2 of the License, or
+ 	* (at your option) any later version.
+ 	*
+ 	* This program is distributed in the hope that it will be useful,
+ 	* but WITHOUT ANY WARRANTY; without even the implied warranty of
+ 	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ 	* GNU General Public License for more details.
+ 	*
+ 	* You should have received a copy of the GNU General Public License
+ 	* along with this program; if not, write to the Free Software
+ 	* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ 	*
+ 	*
+	*/
+
+	private var speechapi:HttpSpeech;
+
+	private var userid:String;
+	private var password:String;
+	private var recCallback:String;
+	private var ttsCallback:String;
+	private var speechServer:String;
+	private var automatic:Boolean;
+	private var speechTimer:Timer; // 1 second
+	private var mousedown:Boolean = false;
+	private var level:Sprite;
+
+
+
+	private function init():void {
+
+	   //get the connection info passed in as a flash param
+	   this.speechServer = this.parameters.speechServer;
+	   //Logger.info("Init method",this.speechServer); 
+	
+	   Security.loadPolicyFile('http://spokentech.net/static/crossdomain.xml');
+	   Security.allowDomain('*');
+	   Security.allowInsecureDomain('*');
+
+	  speechapi = new HttpSpeech();
+	  //ExternalInterface.call("sendData","init");
+
+	  if (ExternalInterface.available) {
+            ExternalInterface.addCallback("initFS", initFS);
+            ExternalInterface.addCallback("speak", speak);
+            ExternalInterface.addCallback("setupRecognition", setupRecognition);
+            ExternalInterface.addCallback("startRecognition", startRecognition);
+	    ExternalInterface.addCallback("stopRecognition", stopRecognition);
+	  } else {
+	    trace("External if not available");
+	    }
+          ExternalInterface.call("speechapi.loaded");
+
+	  //sprite for showing mic level add to UI
+	  level = new Sprite();
+	  level.y = 0;
+  	  level.x = 0;
+  	  myUIComponent.addChild(level);
+
+	}
+
+
+	public function startVxmlAppUrl(vurl:String,callback:String):void {
+		Logger.info("vxml not implemented");
+	}
+		
+	public function startVxmlAppText(vxml:String,callback:String):void {
+		Logger.info("vxml not implemented");
+	}
+			
+	public function stopVxmlApp():void {
+		Logger.info("vxml not implemented");
+	}
+
+	public function sendDtmf(dtmf:String):void {
+		Logger.info("vxml not implemented");
+	}
+	
+	//public functions that can be called from javascript
+	public  function initFS(userid:String, password:String, recCallback:String, ttsCallback:String):void { 
+		//Logger.info("InitFS method ",userid); 
+	
+	     try {
+	          this.userid = userid;
+	          this.password = password;
+	          this.recCallback = recCallback;
+	          this.ttsCallback = ttsCallback;
+	          speechapi.configure(userid,password,OnRecResult,OnFinishTTS,speechServer,micActivityEventHandler);
+             } catch(err:Error) {
+	          ExternalInterface.call("sendData",err.message);
+	     }
+	}
+
+	private  function speak(text:String, speaker:String):void {
+	    //ExternalInterface.call("sendData","playing audio "+text);
+	    speechapi.playAudio(text,speaker);
+	}
+
+	public function setupRecognition(gmode:String,grammar:String, auto:Boolean):void {
+		//Logger.info("setupRecog method ",grammar); 
+	    speechapi.setGmode(gmode)
+	    speechapi.setGrammar(grammar)
+	    if(auto) {
+		this.automatic=true;
+		startRecognition()
+	    }
+        }
+
+	public function startRecognition():void {
+	    //Logger.info("startRecognition","hello"); 
+	    speechapi.startMicRecording();
+	    speechTimer = new Timer(15000, 1);
+	    speechTimer.addEventListener(TimerEvent.TIMER, timeOutRecRequest);
+	    speechTimer.start();
+        }
+
+	public function stopRecognition():void {
+		//Logger.info("stopRecognition","hello"); 
+	    speechapi.stopMicRecording();
+	    speechTimer.stop();
+	}
+
+
+	private function timeOutRecRequest(event:TimerEvent):void  {
+		stopRecognition();
+	}
+
+
+	public function OnRecResult(results:String):void {
+
+		var resultObj:Object = JSON.decode(results) ;
+		if (resultObj.rCode != "Success") {
+		      resultObj.text = "Recognition Error";
+		}
+		ExternalInterface.call(recCallback, resultObj); 
+		resultText.text=resultObj.text; 
+        }
+
+	public function OnFinishTTS():void {
+	    if (ExternalInterface.available) {
+	    //ExternalInterface.call("sendData","tts callback being called");
+	       ExternalInterface.call(ttsCallback); 
+	    }
+        }
+
+
+    	//***********************************************************************
+	// User Interface methods.
+	//***********************************************************************
+	private function speechStartEvent(event:Event):void {
+		//Logger.info("speechstartEvent",automatic); 
+		if (automatic==false) {
+			mousedown=true;
+			display();
+			startRecognition();
+		}
+	}
+		
+	private function speechStopEvent(event:Event):void {
+		//Logger.info("speechstopEvent",automatic); 
+		if (automatic==false) {
+			mousedown=false;
+			display();
+			stopRecognition();
+		}
+	}
+
+	public function display() :void {
+		if (mousedown) {
+			talk.label="Release to Finish";
+		} else {
+			talk.label="Press to Speak Button";
+		}
+	}
+				
+
+	private function automaticClicked():void {
+		if (automaticCheckBox.selected) {
+			this.automatic=true;
+			talk.enabled=false;
+			startRecognition();
+		} else {
+			this.automatic=false;
+			talk.enabled=true;
+		}
+	}
+
+	private function launchMoreInfo():void  {
+		var win:Dialog = PopUpManager.createPopUp(this, Dialog, true) as Dialog;
+		PopUpManager.centerPopUp(win);
+	}
+
+
+	private function micActivityEventHandler(event:ActivityEvent,mic:Microphone):void {
+		level.graphics.clear();
+		level.graphics.beginFill(0xccccff, 1);
+		level.graphics.drawRect(0, 0, (mic.activityLevel * 2), 20);
+		level.graphics.endFill();
+		log.text=mic.activityLevel.toString();
+		if(automatic) {
+			if(event.activating) {
+				startRecognition();
+			} else {
+				stopRecognition();
+			}
+		}
+	}
+
+
+				]]>
+	</mx:Script>
+
+	<mx:Style source= "main.css"/>
+	<mx:Canvas visible="true" id="square" width="215" height="138">
+		<mx:UIComponent id="myUIComponent" x="0" y="0" width="215" height="138" ></mx:UIComponent>
+		<mx:Label x="4" y="67" text="You Said:"/>
+		<mx:HRule y="20" width="215" chromeColor="#000000" x="0"/>
+		<mx:HRule y="0" width="215" chromeColor="#000000" x="0"/>
+		<mx:HRule y="136" width="215" chromeColor="#000000" x="0"/>
+		<mx:HRule x="0" y="118" width="215" chromeColor="#000000"/>
+		<mx:TextInput x="69" y="64" width="132" id="resultText"/>
+		<mx:LinkButton x="40" y="117" label="www.speechapi.com" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
+		<mx:RadioButtonGroup id="radiogroup1"/>
+		<local:CustomButton id="talk"
+			mouseDown="speechStartEvent(event)" mouseUp="speechStopEvent(event)"  width="195"  x="6" y="30" height="29" chromeColor="#FFFF00"
+			label        = "Press to Speak Button" />
+		<mx:CheckBox x="6" y="92" label="Automatic" id="automaticCheckBox" click="automaticClicked()"/>
+		<mx:Label x="10" y="-3" text="debug" width="195" id="log" visible="false"/>
+		<mx:VRule x="0" y="0" height="138"/>
+		<mx:VRule x="213" y="0" height="138"/>
+		<mx:Button x="116" y="91" label="Preferences" click="launchMoreInfo()" visible="false" enabled="false"/>
+	</mx:Canvas>
+	
+
+	<!--mx:Button x="10" y="40" label="Start Rec" click="startRecognition()"/-->
+	<!--mx:Button x="97" y="40" label="Stop Rec" click="stopRecognition()"/-->
+        <!--mx:VBox-->
+          <!--mx:CheckBox x="97" y="10" width="130" id="autoChecked" label="Auto speech detect?" selected="false" click="check()"/--> 
+        <!--/mx:VBox-->
+	
+
+</mx:Application>
