@@ -53,24 +53,16 @@
 			Security.allowDomain("*");	
 			
 			
-			//********************************red5 vars************
 			private var nc:NetConnection;	
 			private var ns:NetStream;
 			private var ns2:NetStream;
 			private var mic:Microphone = Microphone.getMicrophone();
 			private var recognizerReady:Boolean = true;
 			private var streamName:String = "";
-			private var mousedown:Boolean = false;
+			private var inSpeech:Boolean = false;
 			private var level:Sprite;
-			private var bOnce:Boolean = true;
 			private var speechTimer:Timer; // 1 second
 			private var lowestLevel:int=100;
-			//********************************callbacks************
-			private var speakResponder:Responder;	
-			private var streamNameResponder:Responder;		
-			private var responder:Responder;
-			private var fileresponder:Responder;
-			//********************************js vars******************
 			private var username:String = null;
 			private var password:String = null;
 			private var onresult = null;
@@ -108,31 +100,30 @@
 					startRecognition()
 				}
 			}
+
 			public function startRecognition():void
 			{
-				if(recognizerReady)
-				{
-					nc.call("startRecognition", null, streamName, false);
-					mousedown=true;
-					display();
-					speechTimer = new Timer(15000, 1);
-					speechTimer.addEventListener(TimerEvent.TIMER, runOnce);
-					speechTimer.start();
-				}
+				nc.call("startRecognition", null, streamName, false);
+				speechTimer = new Timer(15000, 1);
+				speechTimer.addEventListener(TimerEvent.TIMER, speechTimeoutCallback);
+				speechTimer.start();
 			}
+
+				
+			function speechTimeoutCallback(event:TimerEvent):void 
+			{
+				stopRecognition();
+			}					
+			
 			public function stopRecognition():void
 			{
-				if(recognizerReady)
-				{
-					nc.call("stopRecognition", null, streamName);
-					mousedown=false;
-					display();
-					speechTimer.stop();
-				}
+				nc.call("stopRecognition", null, streamName);
+				speechTimer.stop();
 			}
+
 			public  function speak(text, speaker):void
 			{			
-				nc.call("speak", speakResponder,streamName, text, speaker);
+				nc.call("speak", new Responder(speakResult, null),streamName, text, speaker);
 			}
 
 
@@ -158,39 +149,27 @@
 				Alert.show(dtmf);
 				nc.call("sendDtmf", null, streamName, dtmf);
 			}
-			public function initFS(username,password,onresult,ontts):void
-			{
-			
-				this.username=username;
-				this.password=password;
-				this.onresult=onresult;
-				this.ontts=ontts;
-			}
 
 
-			//****************************************************
-			//*******************CALLBACKS************************
-			//****************************************************
-			private function mouseDown(event:Event):void
+			private function speechStartEvent(event:Event):void
 			{
 				if(automatic==false)
 				{
-					mousedown=true;
+					inSpeech=true;
+					display();
 					startRecognition();
 				}
 			}
-			private function mouseUp(event:Event):void
+			
+			private function speechStopEvent(event:Event):void
 			{
 				if(automatic==false)
 				{
-					mousedown=false;
+					inSpeech=false;
+					display();
 					stopRecognition();
 				}
 			}
-			function runOnce(event:TimerEvent):void 
-			{
-				stopRecognition();
-			}					
 			//*******************************************************************************************************
 			// These methods are invoked from the Red5 RTMP server.  They either take some action upon the netstream
 			// or call the js code using ExternalInterface.call() method
@@ -265,7 +244,6 @@
 			//***********************************************************************************************************
 			private function init():void
 			{
-			
 				this.speechServer = this.parameters.speechServer;
 				connect();
 			}
@@ -275,10 +253,7 @@
 				nc.client=this;
 				nc.connect(this.speechServer);
 				nc.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
-				fileresponder = new Responder(null, null);
-				speakResponder = new Responder(speakResult, null);
-				streamNameResponder = new Responder(streamNameResult, null);
-				nc.call("getStreamName", streamNameResponder);
+				nc.call("getStreamName", new Responder(streamNameResult, null));
 			}
 			public function streamPublishCam(streamName):void
 			{
@@ -290,12 +265,12 @@
 				{
 					mic.rate = 8;
 					mic.gain=80;
-					mic.addEventListener(ActivityEvent.ACTIVITY, activity);
+					mic.addEventListener(ActivityEvent.ACTIVITY, micActivityEventHandler);
 					mic.setLoopBack(true);
 					mic.setSilenceLevel(10,1000);
-					mic.addEventListener(StatusEvent.STATUS, status);
-					mic.addEventListener(Event.ACTIVATE, active);
-					mic.addEventListener(Event.ENTER_FRAME, updateVolLevel);
+					//mic.addEventListener(StatusEvent.STATUS, status);
+					//mic.addEventListener(Event.ACTIVATE, active);
+					//mic.addEventListener(Event.ENTER_FRAME, updateVolLevel);
 					mic.setUseEchoSuppression(true);
 					var tf:SoundTransform = new SoundTransform(0);
 					mic.soundTransform = tf;
@@ -331,12 +306,23 @@
 
 				
 			}	
+				
+			//this method gets called by javascript during the initialization sequence
+			//TODO:  Document the sequence of events at init time.
+			public function initFS(username,password,onresult,ontts):void
+			{
+				this.username=username;
+				this.password=password;
+				this.onresult=onresult;
+				this.ontts=ontts;
+			}
+
 			//***********************************************************************
 			// User Interface methods.
 			//***********************************************************************
 			public function display()
 			{
-				if(mousedown)
+				if(inSpeech)
 				{
 					talk.label="Release to Finish";
 				}
@@ -380,26 +366,7 @@
 				var position = 0;
 			}    
 
-			//The reason for bOnce is to allow the user to remember their response (not need to click allow) and not crash
-			private function active(event:Event):void
-			{
-				if(bOnce)
-				{
-					trace(' active ');
-					bOnce=false;
-					ExternalInterface.call("TheSettings");
-				}
-			}
-			private function status(event:StatusEvent):void
-			{
-				trace("status");
-				if(bOnce)
-				{
-					bOnce=false;
-					ExternalInterface.call("TheSettings");
-				}
-			}
-			private function activity(event:ActivityEvent):void
+			private function micActivityEventHandler(event:ActivityEvent):void
 			{
 				if(lowestLevel > mic.activityLevel)
 					lowestLevel = mic.activityLevel;
@@ -408,14 +375,7 @@
 				level.graphics.drawRect(0, 0, (mic.activityLevel * 2), 20);
 				level.graphics.endFill();
 				log.text=mic.activityLevel.toString();
-				trace("active ");
-				addEventListener(Event.ENTER_FRAME, updateVolLevel);
-				if(bOnce)
-				{
-					trace(' active ');
-					bOnce=false;
-					ExternalInterface.call("TheSettings");
-				}
+				//addEventListener(Event.ENTER_FRAME, updateVolLevel);
 				if(automatic)
 				{
 					if(event.activating)
@@ -447,7 +407,7 @@
 		<mx:LinkButton x="40" y="117" label="www.speechapi.com" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
 		<mx:RadioButtonGroup id="radiogroup1"/>
 		<local:CustomButton id="talk"
-			mouseDown="mouseDown(event)" mouseUp="mouseUp(event)"  width="195"  x="6" y="30" height="29" chromeColor="#FFFF00"
+			mouseDown="speechStartEvent(event)" mouseUp="speechStopEvent(event)"  width="195"  x="6" y="30" height="29" chromeColor="#FFFF00"
 			label        = "Press to Speak Button" />
 		<mx:CheckBox x="6" y="92" label="Automatic" id="automaticCheckBox" click="automaticClicked()"/>
 		<mx:Label x="10" y="-3" text="debug" width="195" id="log" visible="false"/>
