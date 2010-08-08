@@ -10,12 +10,12 @@ package
 		{
 			super();
 		}
-		var disabled:Boolean=false;
+		private var disabled:Boolean=false;
 		public function setAutomatic(a:Boolean):void
 		{
 			disabled = a;
 		}
-		var green:Boolean=true;
+		private var green:Boolean=true;
 		override protected function updateDisplayList(w:Number, h:Number):void
 		{
 			super.updateDisplayList(w,h);
