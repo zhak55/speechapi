@@ -78,7 +78,7 @@ package com.spokentech {
 		}	
 
 		public function configure(username:String,password:String,recCallback:Function,ttsCallback:Function, serviceNamePort:String,micActivityCallback:Function):void {
-	 		//Logger.info("configure method",serviceNamePort); 
+	 		Logger.info("configure method",serviceNamePort); 
 
 			this.username = username;
 			this.password = password;
@@ -209,6 +209,7 @@ package com.spokentech {
 			
 			
 		public function recognize():void  {
+	 		Logger.info("recognize method ",recUrl); 
 			soundRecording.position=0;
                 	var ml:MultipartURLLoader = new MultipartURLLoader();
 			ml.addEventListener(Event.COMPLETE, onReady);
@@ -256,6 +257,7 @@ package com.spokentech {
 
 
 		public function playAudio(text:String,speaker:String):void {
+	 		Logger.info("playAudio method ",ttsUrl); 
 			var myRequest:URLRequest = new URLRequest(ttsUrl);
                         var myLoader:URLLoader = new URLLoader();
                         var streamer:URLStream = new URLStream(  );

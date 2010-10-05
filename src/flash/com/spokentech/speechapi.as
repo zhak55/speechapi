@@ -1,8 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
-<mx:Application  xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="init()" width="215" height="138"  backgroundColor="white" xmlns:controls="controls.*" xmlns:local="*">
+/*
+* speechapi - Flash frontend for use in on-line speech-to-text and text-to-speech.
+*
+* Copyright (C) 20010 Spencer Lord
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+*
+*
+*/
 
-	<mx:Script>
-	<![CDATA[
+package com.spokentech {
+
 	import mx.core.UIComponent;
 	import mx.managers.PopUpManager;
 	import flash.display.Sprite;
@@ -36,29 +55,6 @@
 	import flash.events.Event;
 	import flash.events.StatusEvent;
 	
-
-	/*
- 	* speechapi - Flash frontend for use in on-line speech-to-text and text-to-speech.
- 	*
- 	* Copyright (C) 20010 Spencer Lord
- 	*
- 	* This program is free software; you can redistribute it and/or modify
- 	* it under the terms of the GNU General Public License as published by
- 	* the Free Software Foundation; either version 3 of the License, or
- 	* (at your option) any later version.
- 	*
- 	* This program is distributed in the hope that it will be useful,
- 	* but WITHOUT ANY WARRANTY; without even the implied warranty of
- 	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- 	* GNU General Public License for more details.
- 	*
- 	* You should have received a copy of the GNU General Public License
- 	* along with this program; if not, write to the Free Software
- 	* Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
- 	*
- 	*
-	*/
-
 	private var username:String = null;
 	private var password:String = null;
 
@@ -85,7 +81,7 @@
 	private var recognizerReady:Boolean = true;
 
 
-	private function init():void {
+	public function init():void {
 		//get the connection info passed in as a flash param
 		this.speechServer = this.parameters.speechServer;
 		Logger.info("Init method",this.speechServer); 
@@ -302,7 +298,6 @@
 		stopRecognition();
 	}
 
-
 	public function OnRecResult(results:String):void {
 
 		var resultObj:Object = JSON.decode(results) ;
@@ -319,90 +314,6 @@
 	       ExternalInterface.call(ttsCallback); 
 	    }
         }
-
-
-    	//***********************************************************************
-	// User Interface methods.
-	//***********************************************************************
-	private function speechStartEvent(event:Event):void {
-		//Logger.info("speechstartEvent",automatic); 
-		if (automatic==false) {
-			inSpeech=true;
-			display();
-			startRecognition();
-
-		}
-	}
-		
-	private function speechStopEvent(event:Event):void {
-		//Logger.info("speechstopEvent",automatic); 
-		if (automatic==false) {
-			inSpeech=false;
-			display();
-				stopRecognition();
-		}
-
-	}
-
-	public function display() :void {
-		if (inSpeech) {
-			talk.label="Release to Finish";
-		} else {
-			talk.label="Press to Speak Button";
-		}
-
-	}
-				
-
-	private function automaticClicked():void {
-		if (automaticCheckBox.selected) {
-			this.automatic=true;
-			talk.enabled=false;
-			startRecognition();
-		} else {
-			this.automatic=false;
-			talk.enabled=true;
-		}
-	}
-
-	private function launchMoreInfo():void  {
-		var win:Dialog = PopUpManager.createPopUp(this, Dialog, true) as Dialog;
-		PopUpManager.centerPopUp(win);
-	}
-
-
-
-	private function micActivityEventHandlerHttp(event:ActivityEvent,mic:Microphone):void {
-		level.graphics.clear();
-		level.graphics.beginFill(0xccccff, 1);
-		level.graphics.drawRect(0, 0, (mic.activityLevel * 2), 20);
-		level.graphics.endFill();
-		log.text=mic.activityLevel.toString();
-		if(automatic) {
-			if(event.activating) {
-				startRecognition();
-			} else {
-				stopRecognition();
-			}
-		}
-	}
-
-	private function micActivityEventHandler(event:ActivityEvent):void {
-		level.graphics.clear();
-		level.graphics.beginFill(0xccccff, 1);
-		level.graphics.drawRect(0, 0, (mic.activityLevel * 2), 20);
-		level.graphics.endFill();
-		log.text=mic.activityLevel.toString();
-		//addEventListener(Event.ENTER_FRAME, updateVolLevel);
-		if(automatic) {
-			if(event.activating) {
-				startRecognition();
-			} else {
-				stopRecognition();
-			}
-		}
-	}
-
 
 	public function updateVolLevel(event:Event):void {
 		return;
@@ -481,28 +392,4 @@
 	public  function vxmlComplete(app:String,status:String):void {
 			ExternalInterface.call(vxmlCallback,app,status); 	
 	}
-
-		]]>
-	</mx:Script>
-	<mx:Style source= "main.css"/>
-	
-	<mx:Canvas visible="true" id="square" width="215" height="138">
-		<mx:UIComponent id="myUIComponent" x="0" y="0" width="215" height="138" ></mx:UIComponent>
-		<mx:Label x="4" y="67" text="You Said:"/>
-		<mx:HRule y="20" width="215" chromeColor="#000000" x="0"/>
-		<mx:HRule y="0" width="215" chromeColor="#000000" x="0"/>
-		<mx:HRule y="136" width="215" chromeColor="#000000" x="0"/>
-		<mx:HRule x="0" y="118" width="215" chromeColor="#000000"/>
-		<mx:TextInput x="69" y="64" width="132" id="resultText"/>
-		<mx:LinkButton x="40" y="117" label="www.speechapi.com" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
-		<mx:RadioButtonGroup id="radiogroup1"/>
-		<local:CustomButton id="talk"
-			mouseDown="speechStartEvent(event)" mouseUp="speechStopEvent(event)"  width="195"  x="6" y="30" height="29" chromeColor="#FFFF00"
-			label        = "Press to Speak Button" />
-		<mx:CheckBox x="6" y="92" label="Automatic" id="automaticCheckBox" click="automaticClicked()"/>
-		<mx:Label x="10" y="-3" text="debug" width="195" id="log" visible="false"/>
-		<mx:VRule x="0" y="0" height="138"/>
-		<mx:VRule x="213" y="0" height="138"/>
-		<mx:Button x="116" y="91" label="Preferences" click="launchMoreInfo()" visible="false" enabled="false"/>
-	</mx:Canvas>
-</mx:Application>
+}
