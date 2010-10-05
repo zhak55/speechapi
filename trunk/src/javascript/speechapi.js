@@ -207,7 +207,7 @@ var speechapi = {
 		if (speechapi.grammars[rulename]) {
 			speechapi.grammars[rulename].callback(speechapi.grammars[rulename].text, tag);
 		} else {
-			alert("unhandled rulename/tag "+rulename+"/"+tag);
+			Logger.info("ProcessRule: ","unhandled rulename/tag "+rulename+"/"+tag);
 		}
 	},
 

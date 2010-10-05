@@ -128,6 +128,20 @@
         </mxmlc>
    </target>
 
+   <target name="httpflash">
+	<mxmlc file="${basedir}/src/flash/httpspeech.mxml" keep-generated-actionscript="true">
+            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
+            <source-path path-element="${FLEX_HOME}/frameworks"/>
+	    <source-path path-element="${as3_core}"/>
+
+            <!-- List of SWC files or directories that contain SWC files. -->
+            <compiler.library-path dir="${basedir}/flexlib" append="true">
+                <include name="*.swc" />
+	    </compiler.library-path>
+
+        </mxmlc>
+    </target>
+
 
    <target name="concat-js">
 	   <concat destfile="${js.dir}/gen/speechapi-all.js"
@@ -139,9 +153,16 @@
 
 
     <target name="air">
-        <mxmlc file="httpspeechair.mxml" keep-generated-actionscript="true">
+	    <mxmlc file="${basedir}/src/flash/httpspeechair.mxml" keep-generated-actionscript="true">
             <load-config filename="${FLEX_HOME}/frameworks/air-config.xml"/>
             <source-path path-element="${FLEX_HOME}/frameworks"/>
+	    <source-path path-element="${as3_core}"/>
+
+            <!-- List of SWC files or directories that contain SWC files. -->
+            <compiler.library-path dir="${basedir}/flexlib" append="true">
+                <include name="*.swc" />
+	    </compiler.library-path>
+
         </mxmlc>
     </target>
 
