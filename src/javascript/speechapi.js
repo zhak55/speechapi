@@ -279,7 +279,7 @@ var speechapi = {
 
 
 	setupFocus: function() {
-   		$("input[type=text]").live("focus", function () {
+   		jQuery("input[type=text]").live("focus", function () {
     			if (speechapi.currentFocus)
        				speechapi.currentFocus.style.backgroundColor='white';
     			speechapi.currentFocus = this;
@@ -291,11 +291,11 @@ var speechapi = {
 
 	makeTextClickable: function(speakables) {
     		for (var i = 0; i <speakables.length; i++) {
-        		$(speakables[i]).live("click", function(){
+        		jQuery(speakables[i]).live("click", function(){
           			speechapi.beingRead = this;
           			speechapi.beingReadBC = speechapi.beingRead.style.backgroundColor;
           			speechapi.beingRead.style.backgroundColor='yellow';
-          			speechapi.speak( $(this).text(),'male' );
+          			speechapi.speak( jQuery(this).text(),'male' );
        			});
    		}
 	},
@@ -304,7 +304,7 @@ var speechapi = {
 	makeSpeakLinkGrammar: function(links) {
     		var grammarSeg = "<link> = ( ";
     		for (var j = 0; j <links.length; j++) {
-      			$(links[j]).each(function (i) {
+      			jQuery(links[j]).each(function (i) {
         			var x = this.getAttribute("name");
 				//alert(j+" "+i+ " "+links[j]+" "+x+" " +this.href);
         			if (x != null) {
@@ -328,7 +328,7 @@ var speechapi = {
 	makeClickAndReadGrammar: function(readables) {
     		var grammarSeg = "<readthis> = ( ";
     		for (var j = 0; j <readables.length; j++) {
-      			$(readables[j]).each(function (i) {
+      			jQuery(readables[j]).each(function (i) {
         			var x = this.getAttribute("name");
         			var y = this.getAttribute("id");
 				//alert(j+" "+i+ " "+readables[j]+" "+x+" " +y);
@@ -347,7 +347,7 @@ var speechapi = {
     		var grammarSeg = "<changeFocus> = ( ";
     		for (var j = 0; j <focusables.length; j++) {
       			var selectThis="input[type="+focusables[j]+"]";
-      			$(selectThis).each(function (i) {
+      			jQuery(selectThis).each(function (i) {
         			var x = this.getAttribute("name");
         			var y = this.getAttribute("id");
 				//alert(j+" "+i+ " "+focusables[j]+" "+x+" " +y);
@@ -487,7 +487,7 @@ var speechapi = {
    		//for now no pre grammar (because bug in tags. Dont alwasy get the right tags with optional elements)
    		//grammar2 = grammar2 + "<pre> = (I would like [ to see ] ) | ( [please] get [me] ) | (go to);\n";
 
-   		//$(document).ready(function() {
+   		//jQuery(document).ready(function() {
    		//hyperlinks 
    		if (speechapi.linkables.length>0) {
       			if (firstFlag) {

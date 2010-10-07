@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?> 
 <application xmlns="http://ns.adobe.com/air/application/1.5"> 
-    <id>com.spokentech.httpspeechair</id> 
+    <id>com.spokentech.speechair</id> 
     <version>0.1</version> 
     <filename>main</filename> 
     <initialWindow> 
-        <content>httpspeechair.swf</content> 
+        <content>speechair.swf</content> 
         <visible>true</visible> 
         <systemChrome>none</systemChrome> 
         <transparent>true</transparent> 
+        <debug>true</debug> 
         <width>400</width> 
         <height>200</height> 
     </initialWindow> 

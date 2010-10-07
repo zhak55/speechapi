@@ -39,8 +39,9 @@
    <property name="as3_core" value="${as3.core.lib}"/> 
    <property name="js.dir" value="${basedir}/src/javascript"/> 
 
+   <property name="ADL" value="${FLEX_HOME}/bin/adl.exe"/>
 	
-
+   <property name="APP_DESCRIPTOR" value="${basedir}/src/flash/airtest-app.xml"/>
    
     <path id="maven-ant-tasks.classpath" path="${lib.dir}/maven-ant-tasks-2.1.0.jar" />
     <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
@@ -153,7 +154,7 @@
 
 
     <target name="air">
-	    <mxmlc file="${basedir}/src/flash/httpspeechair.mxml" keep-generated-actionscript="true">
+	    <mxmlc file="${basedir}/src/flash/speechair.mxml" keep-generated-actionscript="true">
             <load-config filename="${FLEX_HOME}/frameworks/air-config.xml"/>
             <source-path path-element="${FLEX_HOME}/frameworks"/>
 	    <source-path path-element="${as3_core}"/>
@@ -165,6 +166,12 @@
 
         </mxmlc>
     </target>
+
+   <target name="airtest" depends="air">
+       <exec executable="${ADL}">
+           <arg value="${APP_DESCRIPTOR}"/>
+       </exec> 
+   </target>
 
 
   <target name="clean-build" depends="clean,war"/>
