@@ -41,8 +41,8 @@
 	   //hard code the username password server url
 	   var userid:String = "sal";
 	   var password :String = "password";
-	   //var speechServer:String ="rtmp://www.speechapi.com:1935/firstapp";
-	   var speechServer:String ="http://www.speechapi.com:8000/speechcloud";
+	   var speechServer:String ="rtmp://www.speechapi.com:1935/firstapp";
+	   //var speechServer:String ="http://www.speechapi.com:8000/speechcloud";
 
 	   var auto:Boolean = false;
 
@@ -54,7 +54,7 @@
 
 
 	   var grammar:String="one,two,three,four,five,six,seven,eight,nine,ten" ;
-	   var gMode:String = 'Simple';
+	   var gMode:String = "simple";
 	   speechapi.setupRecognition(gMode, grammar, auto);
 	}
 
@@ -89,6 +89,15 @@
 	private function micActivityCallback(event:ActivityEvent):void {
 	}
 
+	public function stopspeaksal():void {
+	   speechapi.cancelSpeak();
+	}
+
+	public function speaksal():void {
+	   speechapi.speak("Hello hello hello.  who is out there?", "male");
+        }
+
+
 			
 		]]>
 	</mx:Script>
@@ -98,6 +107,8 @@
 	<!--mx:ComboBox id="comboMicList" x="100" y="10" dataProvider="{microphoneList}"/-->
 	<mx:Button x="10" y="40" label="Start Rec" click="startRecognition()"/>
 	<mx:Button x="97" y="40" label="Stop Rec" click="stopRecognition()"/>
+	<mx:Button x="10" y="70" label="speak" click="speaksal()"/>
+	<mx:Button x="97" y="70" label="stop speak" click="stopspeaksal()"/>
 	<!--mx:Button x="10" y="10" label="Select Mic" click="init()"/-->
 	<!--mx:Button x="97" y="90" label="Test" click="speak('here here','a')"/-->
 	<!--mx:Canvas width="100%" height="100%" id="myCanvas"></mx:Canvas--> 

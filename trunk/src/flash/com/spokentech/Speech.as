@@ -212,6 +212,8 @@ package com.spokentech {
         			} catch(err:Error) {
 			  		Logger.info("initFS: ",err.message);
 				}
+			} else {
+
 			}
 
 		}
@@ -261,6 +263,17 @@ package com.spokentech {
 				nc.call("speak", new Responder(speakResult, null),streamName, text, speaker);
 			}
 		}
+
+		public  function cancelSpeak():void {
+			if (http) {
+				//TODO: add http cancel method here.  but speak is non-blocking so maybe not worth
+				//it till http speak becomes non-blocking`
+				//httpSpeech.playAudio(text,speaker);
+			} else {
+				nc.call("stopSpeaking", null,streamName);
+			}
+		}
+
 
 		public function setupRecognition(gmode:String,grammar:String, auto:Boolean):void {
 			if (http) {
