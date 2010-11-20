@@ -267,12 +267,23 @@ package com.spokentech {
 			//soundRecording = new ByteArray();
 
                         myVariables.text= text;
-                        myVariables.voice = "slt-arctic";
-                        myVariables.mimeType= "audio/mpeg";
-                        myVariables.encoding= "MPEG1L3";
-                        myVariables.sampleRate= "44100";
+			if (speaker == "male") {
+                            myVariables.voice = "hmm-jmk";
+			}else if (speaker =="female") {
+                            myVariables.voice = "hmm-bdl";
+                        } else {
+                            myVariables.voice = speaker;
+                        }
+                        //myVariables.mimeType= "audio/mpeg";
+                        //myVariables.encoding= "MPEG1L3";
+                        //myVariables.sampleRate= "44100";
+ 	                //myVariables.bigEndian='true';
+                        //myVariables.bytesPerValue= "4";
+                        myVariables.mimeType= "audio/x-wav";
+                        myVariables.encoding= "PCM_SIGNED";
+                        myVariables.sampleRate= "16000";
  	                myVariables.bigEndian='true';
-                        myVariables.bytesPerValue= "4";
+                        myVariables.bytesPerValue= "2";
 
                         myRequest.method = URLRequestMethod.GET;
 			myRequest.data = myVariables;

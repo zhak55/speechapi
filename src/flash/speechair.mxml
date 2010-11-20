@@ -44,7 +44,6 @@
 	   var speechServer:String ="rtmp://www.speechapi.com:1935/firstapp";
 	   //var speechServer:String ="http://www.speechapi.com:8000/speechcloud";
 
-	   var auto:Boolean = false;
 
 	   //create the speechapi object
 	   speechapi = new Speech();
@@ -52,10 +51,6 @@
 	   //Init 
 	   speechapi.initAir(userid,password,recCallback,ttsCallback,speechServer, micActivityCallback,micActivityCallbackHttp);
 
-
-	   var grammar:String="one,two,three,four,five,six,seven,eight,nine,ten" ;
-	   var gMode:String = "simple";
-	   speechapi.setupRecognition(gMode, grammar, auto);
 	}
 
 
@@ -65,6 +60,11 @@
 
 
 	public function startRecognition():void {
+
+	   var auto:Boolean = false;
+		var grammar:String="one,two,three,four,five,six,seven,eight,nine,ten" ;
+		var gMode:String = "simple";
+	 	speechapi.setupRecognition(gMode, grammar, auto);
 	    trace("start");
 	    Logger.info("start!");
 	    speechapi.startRecognition();
@@ -98,7 +98,6 @@
         }
 
 
-			
 		]]>
 	</mx:Script>
 	
