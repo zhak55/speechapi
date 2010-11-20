@@ -30,6 +30,7 @@
    <property name="build.home" value="${basedir}/target/build" />
    <property name="build.classes.home" value="${build.home}/classes" />
    <property name="build.war.home" value="${build.home}/war" />
+   <property name="build.flash.home" value="${build.home}/flash" />
    <property name="name" value="${ant.project.name}" />
    <property name="war.filename" value="${name}.war" />
 	
@@ -48,18 +49,14 @@
            uri="antlib:org.apache.maven.artifact.ant"
            classpathref="maven-ant-tasks.classpath" />	
   
-
-
      <target name="setup">
 	<mkdir dir="${build.home}" />
 	<mkdir dir="${build.classes.home}" />
 	<mkdir dir="${build.war.home}/WEB-INF" />
-	
+	<mkdir dir="${build.web.home}" />
+	<mkdir dir="${build.flash.home}" />
      </target>
 	
-
-
-
 	<target name="clean">
 		<delete dir="${build.home}" includeEmptyDirs="true" />
 	</target>
@@ -93,6 +90,7 @@
 		<war warfile="${build.war.home}/${war.filename}" webxml="${build.war.home}/WEB-INF/web.xml">
 			<webinf dir="${build.war.home}/WEB-INF" includes="*.*" />
 			<zipfileset dir="${basedir}/etc" prefix="WEB-INF/classes" includes="log4j.xml" />
+			<zipfileset dir="${basedir}/etc"  includes="crossdomain.xml" />
 			<classes dir="${build.classes.home}" />
 			<lib dir="${basedir}/lib" />
 			<zipfileset dir="${build.war.home}/streams" prefix="streams" />	
@@ -116,7 +114,7 @@
 
     <taskdef resource="flexTasks.tasks" classpath="${FLEX_HOME}/ant/lib/flexTasks.jar" /> 
     <target name="flash">
-	    <mxmlc file="${basedir}/src/flash/speechapi.mxml" keep-generated-actionscript="true">
+	    <mxmlc file="${basedir}/src/flash/speechapi.mxml" output="${build.flash.home}/lib/speechapi.swf"  keep-generated-actionscript="true">
              <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
             <source-path path-element="${FLEX_HOME}/frameworks"/>
 	    <source-path path-element="${as3_core}"/>
@@ -128,20 +126,6 @@
 	    
         </mxmlc>
    </target>
-
-   <target name="httpflash">
-	<mxmlc file="${basedir}/src/flash/httpspeech.mxml" keep-generated-actionscript="true">
-            <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>
-            <source-path path-element="${FLEX_HOME}/frameworks"/>
-	    <source-path path-element="${as3_core}"/>
-
-            <!-- List of SWC files or directories that contain SWC files. -->
-            <compiler.library-path dir="${basedir}/flexlib" append="true">
-                <include name="*.swc" />
-	    </compiler.library-path>
-
-        </mxmlc>
-    </target>
 
 
    <target name="concat-js">
@@ -173,6 +157,17 @@
        </exec> 
    </target>
 
+    <target name="deploy">
+	         <copy todir="${webserver.htdocs}/speechapi" overwrite="true" filtering="true">
+			<fileset dir="${basedir}/src/test" includes="*.html" />
+		</copy>
+	    <copy todir="${webserver.htdocs}/speechapi/lib" overwrite="true" filtering="true">
+		    <fileset dir="${build.flash.home}/lib" includes="*.swf" />
+		    <fileset dir="${basedir}/src/javascript" includes="*.js" />
+		    <fileset dir="${basedir}/src/javascript/thirdparty" includes="*.js" />
+		</copy>
+    </target>
+   
 
   <target name="clean-build" depends="clean,war"/>
 </project>

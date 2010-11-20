@@ -7,29 +7,18 @@
 	import mx.managers.PopUpManager;
 	import flash.display.Sprite;
 	import flash.external.ExternalInterface;
-	import com.spokentech.HttpSpeech;
 	import com.spokentech.Speech;
         import flash.system.SecurityDomain;
 	import flash.system.Security;
 	import flash.media.Microphone;
-	import com.adobe.serialization.json.JSON;
 	import org.osflash.thunderbolt.Logger;
-	import flash.net.NetConnection;
-	import flash.net.NetStream;
-	import flash.net.Responder;
 
-	//import flash.display.*;
-	//import flash.display.MovieClip;
 	import flash.display.SimpleButton;
 	import flash.events.AsyncErrorEvent;
-	import flash.events.NetStatusEvent;
 	import flash.external.*;
-	//import flash.media.Camera;
 	import flash.media.Microphone;
-	//import flash.media.Video;
 	import flash.system.Security;
 	import flash.system.SecurityDomain;
-	//import flash.text.*;
 	import mx.controls.Alert;
 	import mx.core.UIComponent;
 	import mx.managers.PopUpManager;
@@ -60,32 +49,18 @@
  	*
 	*/
 
-	private var username:String = null;
-	private var password:String = null;
 
-	private var recCallback:String;
-	private var ttsCallback:String;
-	private var vxmlCallback:String;
 
 	private var inSpeech:Boolean = false;
 	private var http:Boolean = true;
 
-	private var httpSpeech:HttpSpeech;
 
-	private var speechServer:String =null;
 	private var automatic:Boolean;
-	private var speechTimer:Timer; // 1 second
 	private var level:Sprite;
 			
-	private var nc:NetConnection;	
-	private var ns:NetStream;
-	private var ns2:NetStream;
-	private var streamName:String = "";
-
 	private var mic:Microphone = Microphone.getMicrophone();
-	private var recognizerReady:Boolean = true;
 
-	private var speech:Speech;
+	public var speech:Speech;
 
 
 	private function init():void {
@@ -93,77 +68,14 @@
 		//todo: do i really need to pass around these tow mic event handlers just toshow mic activity in the ui?
 		speech.init(this.parameters.speechServer, micActivityEventHandler, micActivityEventHandlerHttp);
 
-		
-			//TODO: Take a closer look at this.  Not working very well
-			level = new Sprite();
-			level.y = 0;
-			level.x = 0;
-			myUIComponent.addChild(level);
-	}	
-
-
-	public function streamNameResult(message:String):void {
-		speech.streamNameResult(message);
-	}	
-				
-	public function publishRtmpStream(streamName:String):void {
+		//TODO: Take a closer look at this.  Not working very well
 		level = new Sprite();
 		level.y = 0;
 		level.x = 0;
 		myUIComponent.addChild(level);
-
-		speech.publishRtmpStream(streamName);
-	}
-
-	//this method gets called by javascript during the initialization sequence
-	//TODO:  Document the sequence of events at init time.
-	public  function initFS(username:String, password:String, recCallback:String, ttsCallback:String):void { 
-		speech.initFS(username,password,recCallback,ttsCallback);
-	}
-
-	public function startVxmlAppUrl(vurl:String,callback:String):void {
-		speech.startVxmlAppUrl(vurl,callback);
-	}
-		
-	public function startVxmlAppText(vxml:String,callback:String):void {
-		speech.startVxmlAppText(vxml,callback);
-	}
-			
-	public function stopVxmlApp():void {
-		speech.stopVxmlApp();
-	}
-
-	public function sendDtmf(dtmf:String):void {
-		speech.sendDtmf(dtmf);
-	}
-	
-
-	private  function speak(text:String, speaker:String):void {
-		speech.speak(text,speaker);
-	}
-
-	public function setupRecognition(gmode:String,grammar:String, auto:Boolean):void {
-		speech.setupRecognition(gmode,grammar,auto);
-        }
-
-	public function startRecognition():void {
-		speech.startRecognition();
-        }
-
-	public function stopRecognition():void {
-		speech.stopRecognition();
-	}
+	}	
 
 
-
-
-	public function OnRecResult(results:String):void {
-		speech.OnRecResult(results);
-        }
-
-	public function OnFinishTTS():void {
-		speech.OnFinishTTS();
-        }
 
 
     	//***********************************************************************
@@ -174,7 +86,7 @@
 		if (automatic==false) {
 			inSpeech=true;
 			display();
-			startRecognition();
+			speech.startRecognition();
 
 		}
 	}
@@ -184,7 +96,7 @@
 		if (automatic==false) {
 			inSpeech=false;
 			display();
-				stopRecognition();
+			speech.stopRecognition();
 		}
 
 	}
@@ -203,7 +115,7 @@
 		if (automaticCheckBox.selected) {
 			this.automatic=true;
 			talk.enabled=false;
-			startRecognition();
+			speech.startRecognition();
 		} else {
 			this.automatic=false;
 			talk.enabled=true;
@@ -215,8 +127,6 @@
 		PopUpManager.centerPopUp(win);
 	}
 
-
-
 	private function micActivityEventHandlerHttp(event:ActivityEvent,mic:Microphone):void {
 		level.graphics.clear();
 		level.graphics.beginFill(0xccccff, 1);
@@ -225,9 +135,9 @@
 		log.text=mic.activityLevel.toString();
 		if(automatic) {
 			if(event.activating) {
-				startRecognition();
+				speech.startRecognition();
 			} else {
-				stopRecognition();
+				speech.stopRecognition();
 			}
 		}
 	}
@@ -241,91 +151,14 @@
 		//addEventListener(Event.ENTER_FRAME, updateVolLevel);
 		if(automatic) {
 			if(event.activating) {
-				startRecognition();
+				speech.startRecognition();
 			} else {
-				stopRecognition();
+				speech.stopRecognition();
 			}
 		}
 	}
 
 
-	public function updateVolLevel(event:Event):void {
-		return;
-	} 
-
-
-	private function asyncErrorHandler(event:AsyncErrorEvent):void  {
-		trace(event.text);
-	}
-
-	private function soundCompleteHandler(event:Event):void  {
-		//var position = 0;  /huh?
-	}
-
-	//necessary red5 method
-	public function onBWDone():void  {}
-
-
-		
-	//*******************************************************************************************************
-	// These methods are invoked from the Red5 RTMP server.  They either take some action upon the netstream
-	// or call the js code using ExternalInterface.call() method
-	//*******************************************************************************************************
-	public function flashReady():void {
-		if (ExternalInterface.available) {
-			ExternalInterface.call("flashReady");
-		}
-	}
-			
-	public  function playAudio(filename:String):void {
-		if (ns2 == null) {
-			ns2 = new NetStream(nc);       
-			ns2.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
-			ns2.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
-		}
-		ns2.play("mp3:" + filename);
-	}
-
-	public function passResults(result:String):void {
-		var resultObj:Object = JSON.decode(result) ;
-		if (resultObj.rCode != "Success") {
-		      resultObj.text = "Recognition Error";
-		}
-		ExternalInterface.call(recCallback, resultObj); 
-		resultText.text=resultObj.text;
-	}
-
-	private function netStatusHandler(e:NetStatusEvent):void {
-		var code:String = e.info.code;
-		if(code == "NetStream.Buffer.Empty") {
-			ExternalInterface.call(ttsCallback); 	
-		} else if(code == "NetConnection.Connect.Success") {
-			ns = new NetStream(nc);        //plus other stuff if you need.
-			ns.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
-		} else {
-			trace(code);
-		}
-	}
-
-	public  function speakResult(message:String):void {
-		if (ns2 == null) {
-			ns2 = new NetStream(nc);       
-			ns2.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
-			ns2.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
-			//var customClient:Object = new Object();
-		}
-		ns2.play("mp3:" + message);
-	}
-
-	public  function stopSpeaking():void {
-		if (ns2 != null) {
-			ns2.close();
-		}
-	}
-
-	public  function vxmlComplete(app:String,status:String):void {
-			ExternalInterface.call(vxmlCallback,app,status); 	
-	}
 
 		]]>
 	</mx:Script>
@@ -339,7 +172,7 @@
 		<mx:HRule y="136" width="215" chromeColor="#000000" x="0"/>
 		<mx:HRule x="0" y="118" width="215" chromeColor="#000000"/>
 		<mx:TextInput x="69" y="64" width="132" id="resultText"/>
-		<mx:LinkButton x="40" y="117" label="www.speechapi.com" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
+		<mx:LinkButton x="40" y="117" label="www.speechapi.coooom" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
 		<mx:RadioButtonGroup id="radiogroup1"/>
 		<local:CustomButton id="talk"
 			mouseDown="speechStartEvent(event)" mouseUp="speechStopEvent(event)"  width="195"  x="6" y="30" height="29" chromeColor="#FFFF00"

@@ -192,6 +192,14 @@ package com.spokentech {
 			initCommon(username,password);
 		}
 
+		// 
+		public  function initSal(username:String, password:String, recCallback:Function, ttsCallback:Function,
+                                         micActivityCallback:Function,micActivityCallbackHttp:Function):void { 
+	        	this.recCallbackAir = recCallback;
+			this.ttsCallbackAir = ttsCallback;
+			initCommon(username,password);						//init part two (common part)
+		}
+
 		// initAir is combined to one method, no waiting required.
 		public  function initAir(username:String, password:String, recCallback:Function, ttsCallback:Function,
                                          speechServer: String, micActivityCallback:Function,micActivityCallbackHttp:Function):void { 
@@ -207,7 +215,6 @@ package com.spokentech {
 	        	this.password = password;
 			if (http) {
 				try {
-			  		Logger.info("initFS: ",speechServer);
 	        	  		httpSpeech.configure(username,password,recognitionComplete,ttsComplete,speechServer,micActivityCallbackHttp);
         			} catch(err:Error) {
 			  		Logger.info("initFS: ",err.message);
@@ -391,16 +398,19 @@ package com.spokentech {
 			ns2.play("mp3:" + filename);
 		}
 
-		/*public function passResults(result:String):void {
+		public function passResults(result:String):void {
 			var resultObj:Object = JSON.decode(result) ;
 			if (resultObj.rCode != "Success") {
 		      		resultObj.text = "Recognition Error";
 			}
+
 			if (ExternalInterface.available) {
 				ExternalInterface.call(recCallback, resultObj); 
 			}
-			resultText.text=resultObj.text;
-		}*/
+			if (recCallbackAir != null) {
+				recCallbackAir(resultObj);
+			}
+		}
 
 		private function netStatusHandler(e:NetStatusEvent):void {
 			var code:String = e.info.code;

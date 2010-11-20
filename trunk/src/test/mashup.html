@@ -9,8 +9,8 @@
 
 <title></title> 
 
-<script type="text/javascript" src="swfobject.js"></script>
-<script type="text/javascript" src="speechapi-1.1.js"></script>
+<script type="text/javascript" src="lib/swfobject.js"></script>
+<script type="text/javascript" src="lib/speechapi.js"></script>
 <script type="text/javascript" src="http://www.speechapi.com/static/jquery-1.4.2.min.js"></script>
 
 <script language="JavaScript" type="text/javascript" >
@@ -28,7 +28,7 @@
         var params = {allowscriptaccess : "always"};
 	var attributes = {};
 	attributes.id = "flashContent";
-	swfobject.embedSWF("speechapi.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
+	swfobject.embedSWF("lib/speechapi.swf", "myAlternativeContent", "215", "138", "9.0.28", false,flashvars, params, attributes);
 	speechapi.setupPage("sal","password",onResult,onTtsComplete, onLoaded, "flashContent",linkables,speakables,focusables,browserControl,formsEnabled);
 
 
