@@ -300,7 +300,7 @@ package com.spokentech {
 				grammarArray[1]=gmode;
 				this.automatic=auto;
 				nc.call("initializeSettings", null, credentials, grammarArray, auto, streamName);			
-				if(automatic) {
+				if(auto) {
 					automatic=true;
 					startRecognition()
 				}

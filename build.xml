@@ -53,7 +53,7 @@
 	<mkdir dir="${build.home}" />
 	<mkdir dir="${build.classes.home}" />
 	<mkdir dir="${build.war.home}/WEB-INF" />
-	<mkdir dir="${build.web.home}" />
+	<!--mkdir dir="${build.web.home}" /-->
 	<mkdir dir="${build.flash.home}" />
      </target>
 	
@@ -125,7 +125,20 @@
             </compiler.library-path>
 	    
         </mxmlc>
-   </target>
+    </target>
+
+    <target name="flex-lib">
+        <compc 
+		output="${build.flash.home}/lib/speechapi.swc"
+            include-classes="com.spokentech.Speech com.spokentech.HttpSpeech com.adobe.audio.format.WAVWriter ru.inspirit.net.MultipartURLLoader ru.inspirit.net.events.MultipartURLLoaderEvent">
+	    <source-path path-element="${as3_core}"/>
+	    <source-path path-element="${basedir}/src/flash"/>
+            <!-- List of SWC files or directories that contain SWC files. -->
+            <compiler.library-path dir="${basedir}/flexlib" append="true">
+                <include name="*.swc" />
+	    </compiler.library-path>
+        </compc>
+    </target>
 
 
    <target name="concat-js">
@@ -156,6 +169,7 @@
            <arg value="${APP_DESCRIPTOR}"/>
        </exec> 
    </target>
+
 
     <target name="deploy">
 	         <copy todir="${webserver.htdocs}/speechapi" overwrite="true" filtering="true">

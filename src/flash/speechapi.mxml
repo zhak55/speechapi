@@ -172,7 +172,7 @@
 		<mx:HRule y="136" width="215" chromeColor="#000000" x="0"/>
 		<mx:HRule x="0" y="118" width="215" chromeColor="#000000"/>
 		<mx:TextInput x="69" y="64" width="132" id="resultText"/>
-		<mx:LinkButton x="40" y="117" label="www.speechapi.coooom" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
+		<mx:LinkButton x="40" y="117" label="www.speechapi.com" click="{navigateToURL(new URLRequest('http://www.speechapi.com'),'_blank')}"/>
 		<mx:RadioButtonGroup id="radiogroup1"/>
 		<local:CustomButton id="talk"
 			mouseDown="speechStartEvent(event)" mouseUp="speechStopEvent(event)"  width="195"  x="6" y="30" height="29" chromeColor="#FFFF00"
