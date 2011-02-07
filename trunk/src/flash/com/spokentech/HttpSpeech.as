@@ -42,6 +42,7 @@ package com.spokentech {
 
 	import flash.system.Security;
 	import flash.system.SecurityPanel;
+	import mx.controls.Alert;
 
         import ru.inspirit.net.MultipartURLLoader;
  
@@ -126,7 +127,7 @@ package com.spokentech {
 			microphone = Microphone.getMicrophone(selectedMic);
             		Security.showSettings(SecurityPanel.PRIVACY);
 
-			microphone.rate = 8;
+			microphone.rate = 16;
 			
 			//addEventListener(Event.ENTER_FRAME, drawLines)
 			//micTimer.addEventListener(TimerEvent.TIMER, ShowMicActivity);
@@ -152,6 +153,7 @@ package com.spokentech {
 			micDetails += "Silence level: " + microphone.silenceLevel + '\n'; 
 			micDetails += "Silence timeout: " + microphone.silenceTimeout + '\n'; 
 			micDetails += "Echo suppression: " + microphone.useEchoSuppression + '\n'; 
+			//Alert.show("httpspeech.setupMic()",micDetails); 
 			//Logger.info("httpspeech.setupMic()",micDetails); 
 		}
  
@@ -209,10 +211,13 @@ package com.spokentech {
 			
 			
 		public function recognize():void  {
+
+			//Alert.show(recUrl);
 	 		Logger.info("recognize method ",recUrl); 
 			soundRecording.position=0;
                 	var ml:MultipartURLLoader = new MultipartURLLoader();
 			ml.addEventListener(Event.COMPLETE, onReady);
+			ml.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, recComplete);
 			ml.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, recComplete);
  
 			function recComplete(e:DataEvent):void {
@@ -231,7 +236,7 @@ package com.spokentech {
 			ml.addVariable('doEndpointing', 'false');
 			ml.addVariable('CmnBatchFlag', 'true');
 			ml.addVariable('encoding', 'PCM_SIGNED');
-			ml.addVariable('sampleRate', '8000');
+			ml.addVariable('sampleRate', '16000');
 			ml.addVariable('bigEndian', 'false');
 			ml.addVariable('bytesPerValue', '2');
  
@@ -242,8 +247,8 @@ package com.spokentech {
 			soundRecording.position = 0;  // rewind to the beginning of the sample
 			wavWriter.numOfChannels = 1; // set the inital properties of the Wave Writer
 			wavWriter.sampleBitRate = 16;
-			wavWriter.samplingRate = 8000;
-			wavWriter.processSamples(data, soundRecording, 8000, 1); 
+			wavWriter.samplingRate = 16000;
+			wavWriter.processSamples(data, soundRecording, 16000, 1); 
 
 			//Logger.info( "httpspeech.recognize" , data.length+ " bytes" );    
 			if (gMode != "lm") {
@@ -252,17 +257,21 @@ package com.spokentech {
 			ml.addFile(data, 'audio', 'audio', 'audio/x-wav');
 			ml.load(recUrl)
 
+			//Alert.show(grammar);
 		}
  
 
 
 		public function playAudio(text:String,speaker:String):void {
-	 		Logger.info("playAudio method ",ttsUrl); 
+			//Alert.show(ttsUrl);
+			//Alert.show(text);
+			//Alert.show(speaker);
+	 		//Logger.info("playAudio method ",ttsUrl); 
 			var myRequest:URLRequest = new URLRequest(ttsUrl);
-                        var myLoader:URLLoader = new URLLoader();
-                        var streamer:URLStream = new URLStream(  );
 			var myVariables:URLVariables = new URLVariables();
-                        var req:URLRequest = new URLRequest("04-AudioTrack 04.mp3");
+                        //var myLoader:URLLoader = new URLLoader();
+                        //var streamer:URLStream = new URLStream(  );
+                        //var req:URLRequest = new URLRequest("04-AudioTrack 04.mp3");
 
 			//soundRecording = new ByteArray();
 
@@ -274,16 +283,16 @@ package com.spokentech {
                         } else {
                             myVariables.voice = speaker;
                         }
-                        //myVariables.mimeType= "audio/mpeg";
-                        //myVariables.encoding= "MPEG1L3";
-                        //myVariables.sampleRate= "44100";
- 	                //myVariables.bigEndian='true';
-                        //myVariables.bytesPerValue= "4";
-                        myVariables.mimeType= "audio/x-wav";
-                        myVariables.encoding= "PCM_SIGNED";
-                        myVariables.sampleRate= "16000";
+                        myVariables.mimeType= "audio/mpeg";
+                        myVariables.encoding= "MPEG1L3";
+                        myVariables.sampleRate= "44100";
  	                myVariables.bigEndian='true';
-                        myVariables.bytesPerValue= "2";
+                        myVariables.bytesPerValue= "4";
+                        //myVariables.mimeType= "audio/x-wav";
+                        //myVariables.encoding= "PCM_SIGNED";
+                        //myVariables.sampleRate= "16000";
+ 	                //myVariables.bigEndian='true';
+                        //myVariables.bytesPerValue= "2";
 
                         myRequest.method = URLRequestMethod.GET;
 			myRequest.data = myVariables;
@@ -293,6 +302,9 @@ package com.spokentech {
 
 
 			soundOutput = new Sound();
+                        soundOutput.addEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+                        soundOutput.addEventListener(ProgressEvent.PROGRESS, progressHandler);
+			soundOutput.addEventListener(Event.COMPLETE, onLoadComplete);
 
 			try {
 			       soundOutput.load(myRequest);
@@ -300,19 +312,26 @@ package com.spokentech {
 			       soundOutput.play();
                             
 			} catch (err:Error) {
+				Alert.show(err.message);
                                trace(err.message);
 			}
 
 
-                        soundOutput.addEventListener(IOErrorEvent.IO_ERROR, errorHandler);
-                        soundOutput.addEventListener(ProgressEvent.PROGRESS, progressHandler);
 			//this.addChild(statusTextField);
 				 
+		}
+
+		function onLoadComplete(event:Event):void {
+				//Alert.show(event.toString());
+		    //var localSound:Sound = event.target as Sound;
+		    //localSound.play();
 		}
 
                 private function progressHandler(event:ProgressEvent):void {
 			var loadTime:Number = event.bytesLoaded / event.bytesTotal;
 			var LoadPercent:uint = Math.round(100 * loadTime);
+
+			//Alert.show(event.toString());
 
 			trace("Sound file's size in bytes: " + event.bytesTotal + "\n" 
 				+ "Bytes being loaded: " + event.bytesLoaded + "\n" 
@@ -321,6 +340,7 @@ package com.spokentech {
  
                 private function errorHandler(errorEvent:IOErrorEvent):void {
                             trace("The sound could not be loaded: " + errorEvent.text);
+			//Alert.show(errorEvent.toString());
                 }
          }
 }

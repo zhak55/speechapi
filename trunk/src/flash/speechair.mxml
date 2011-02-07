@@ -32,6 +32,7 @@
 	*/
 		
 	private var speechapi:Speech;
+	private var mic:Microphone = Microphone.getMicrophone();
 
 	protected function init():void {
 
@@ -41,15 +42,15 @@
 	   //hard code the username password server url
 	   var userid:String = "sal";
 	   var password :String = "password";
-	   var speechServer:String ="rtmp://www.speechapi.com:1935/firstapp";
-	   //var speechServer:String ="http://www.speechapi.com:8000/speechcloud";
+	   //var speechServer:String ="rtmp://www.speechapi.com:1935/firstapp";
+	   var speechServer:String ="http://www.speechapi.com:8000/speechcloud";
 
 
 	   //create the speechapi object
 	   speechapi = new Speech();
 	   
 	   //Init 
-	   speechapi.initAir(userid,password,recCallback,ttsCallback,speechServer, micActivityCallback,micActivityCallbackHttp);
+	   speechapi.initAir(userid,password,recCallback,ttsCallback,speechServer, micActivityEventHandler,micActivityEventHandlerHttp);
 
 	}
 
@@ -77,24 +78,50 @@
 
 
 	public function recCallback(results:Object):void {
+	   //Alert.show(results.text);
 	   speak("you said, "+results.text, "male");
         }
 
 	public function ttsCallback():void {
 	}
 
-	private function micActivityCallbackHttp(event:ActivityEvent,mic:Microphone):void {
+
+	private function micActivityEventHandlerHttp(event:ActivityEvent,mic:Microphone):void {
+		//log.text=mic.activityLevel.toString();
+		//Alert.show(mic.activityLevel.toString());
+		var automatic:Boolean = false;
+		if(automatic) {
+			if(event.activating) {
+				speechapi.startRecognition();
+			} else {
+				speechapi.stopRecognition();
+			}
+		}
 	}
 
-	private function micActivityCallback(event:ActivityEvent):void {
+	private function micActivityEventHandler(event:ActivityEvent):void {
+		//Alert.show(mic.activityLevel.toString());
+		//log.text=mic.activityLevel.toString();
+		//addEventListener(Event.ENTER_FRAME, updateVolLevel);
+		var automatic:Boolean = false;
+		if(automatic) {
+			if(event.activating) {
+				speechapi.startRecognition();
+			} else {
+				speechapi.stopRecognition();
+			}
+		}
 	}
+
+
+
 
 	public function stopspeaksal():void {
 	   speechapi.cancelSpeak();
 	}
 
 	public function speaksal():void {
-	   speechapi.speak("Hello hello hello.  who is out there?", "male");
+	   speechapi.speak("Hello hello hello.  who is out there?", "female");
         }
 
 
