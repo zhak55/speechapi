@@ -36,6 +36,7 @@ package com.adobe.audio.format
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.IDataOutput;
+	import org.osflash.thunderbolt.Logger;
 	
 
 /**
@@ -149,7 +150,7 @@ public class WAVWriter
 	 *  @param inputNumChannels	The number of audio changes in <code>dataInput</code> data.
 	 *  	
 	 */
-	public function processSamples(dataOutput:IDataOutput, dataInput:ByteArray, inputSamplingRate:int, inputNumChannels:int = 1):void
+	public function processSamples(dataOutput:IDataOutput, dataInput:ByteArray, inputSamplingRate:int, inputNumChannels:int = 1, raw:Boolean=false):void
 	{
 		if (!dataInput || dataInput.bytesAvailable <= 0) // Return if null
 			return;  //throw new Error("No audio data");
@@ -163,11 +164,14 @@ public class WAVWriter
 		var fileSize:int = 32 + 8 + dataByteLength;
 		// WAV format requires little-endian
 		dataOutput.endian = Endian.LITTLE_ENDIAN;  
-		// RIFF WAVE Header Information
-		header(dataOutput, fileSize);
-		// Data Chunk Header
-		dataOutput.writeUTFBytes("data");
-		dataOutput.writeUnsignedInt(dataByteLength); // Size of whole file
+
+		if (raw == false) {
+			// RIFF WAVE Header Information
+			header(dataOutput, fileSize);
+			// Data Chunk Header
+			dataOutput.writeUTFBytes("data");
+			dataOutput.writeUnsignedInt(dataByteLength); // Size of whole file
+		}
 		
 		// Write data to file
 		dataInput.position = 0;
@@ -189,10 +193,10 @@ public class WAVWriter
 			var soundRateFloor:int = Math.floor(soundRate);
 			var jlen:int = 0;
 			var channelCount:int = (numOfChannels-inputNumChannels);
-			/*
-			trace("resampleFrequency: " + resampleFrequency + " resampleFrequencyCheck: " + resampleFrequencyCheck
-				+ " soundRateCeil: " + soundRateCeil + " soundRateFloor: " + soundRateFloor);
-			*/
+			
+			/*Logger.info("resampleFrequency: " + resampleFrequency + " resampleFrequencyCheck: " + resampleFrequencyCheck
+				+ " soundRateCeil: " + soundRateCeil + " soundRateFloor: " + soundRateFloor);*/
+			
 			var value:Number = 0;
 			// Assumes data is in samples of float value
 			for (var i:int = 0;i < readSampleLength;i+=4)
