@@ -68,7 +68,10 @@ package com.spokentech {
 		private var grammar:String;	
 		private var gData:ByteArray;	
 	        private var autoRecMode:Boolean = false;
-
+		private var oog:Boolean = false;
+		private var oogBranchProb:String = "1e-25";
+		private var phoneProb:String = "1e-20";
+	        private var bufferCount:int= 0;
 
 		private var recUrl:String = "http://spokentech.net:8000/speechcloud/SpeechUploadServlet";
 		private var ttsUrl:String = "http://spokentech.net:8000/speechcloud/SpeechDownloadServlet";
@@ -79,7 +82,7 @@ package com.spokentech {
 		}	
 
 		public function configure(username:String,password:String,recCallback:Function,ttsCallback:Function, serviceNamePort:String,micActivityCallback:Function):void {
-	 		Logger.info("configure method",serviceNamePort); 
+	 		//Logger.info("configure method",serviceNamePort); 
 
 			this.username = username;
 			this.password = password;
@@ -109,6 +112,15 @@ package com.spokentech {
                         }
 		}
 			
+		public function setOog(oog:Boolean):void {
+			this.oog = oog;
+		}
+
+	        public function setOogParams(oogBranchProb:String, phoneProb:String):void {
+			this.oogBranchProb =oogBranchProb  ;
+			this.phoneProb =phoneProb  ;
+		}
+
 
 		public function setGrammar(grammar:String):void {
 			this.grammar = grammar;
@@ -159,7 +171,7 @@ package com.spokentech {
  
  
 		private function onMicActivity(event:ActivityEvent):void  {
-    			//Logger.info("HttpSpeech.as:","activating=" + event.activating + ", activityLevel=" +  microphone.activityLevel); 
+    			 //Logger.info("HttpSpeech.as:","activating=" + event.activating + ", activityLevel=" +  microphone.activityLevel); 
 
                          if (autoRecMode) {
 			        if (event.activating) {
@@ -193,6 +205,7 @@ package com.spokentech {
     		    //Logger.info("HttpSpeech.as", "start recording");
 		        position = 0;
 			isRecording = true;
+			bufferCount=0;
 			soundRecording = new ByteArray();
 			microphone.addEventListener(SampleDataEvent.SAMPLE_DATA, gotMicData);
 		}
@@ -205,6 +218,7 @@ package com.spokentech {
 		}
 
 		private function gotMicData(micData:SampleDataEvent):void {
+
 			soundRecording.writeBytes(micData.data);
 			//Logger.info( "httpspeech.as, gotMicData.soundrecording,  " + soundRecording.length + " bytes");    
 		}
@@ -213,7 +227,7 @@ package com.spokentech {
 		public function recognize():void  {
 
 			//Alert.show(recUrl);
-	 		Logger.info("recognize method ",recUrl); 
+	 		//Logger.info("recognize method ",recUrl); 
 			soundRecording.position=0;
                 	var ml:MultipartURLLoader = new MultipartURLLoader();
 			ml.addEventListener(Event.COMPLETE, onReady);
@@ -239,6 +253,9 @@ package com.spokentech {
 			ml.addVariable('sampleRate', '16000');
 			ml.addVariable('bigEndian', 'false');
 			ml.addVariable('bytesPerValue', '2');
+			ml.addVariable('detectOOG', oog);
+			ml.addVariable('oogBranchProb',oogBranchProb );
+			ml.addVariable('phoneInsertionProb',phoneProb );
  
 
 			//convert to wave file
@@ -248,7 +265,7 @@ package com.spokentech {
 			wavWriter.numOfChannels = 1; // set the inital properties of the Wave Writer
 			wavWriter.sampleBitRate = 16;
 			wavWriter.samplingRate = 16000;
-			wavWriter.processSamples(data, soundRecording, 16000, 1); 
+			wavWriter.processSamples(data, soundRecording, 16000, 1, true); 
 
 			//Logger.info( "httpspeech.recognize" , data.length+ " bytes" );    
 			if (gMode != "lm") {

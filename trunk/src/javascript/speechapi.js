@@ -44,6 +44,7 @@ var speechapi = {
 	styleControl: false,
 	formsEnabled: true,
 	mashupMode: false,
+	oog: false,
 
 	//------------
 	//Low level API
@@ -87,7 +88,7 @@ var speechapi = {
    			for (var k in result.ruleMatches) {
 	   			speechapi.processRule2(result.ruleMatches[k]._rule,result.ruleMatches[k]._tag,result.text); 
    			}
-   			speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false);
+   			speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false,oog);
 		}
 
         	if (result == null) {
@@ -148,16 +149,23 @@ var speechapi = {
 		}
 	},
 
-	setupRecognition: function(grammarType, grammar, automatic) {
+	setOogParms: function(oogBranchProb, phoneProb ) {
+		document.getElementById(speechapi.containerID).setOogParms(oogBranchProb, phoneProb);
+	},
+
+	setupRecognition: function(grammarType, grammar, automatic, oogFlag) {
+		speechapi.oog = oogFlag;
 
 		if (typeof automatic === 'undefined') automatic = speechapi.automatic;
+
+		if (typeof oogFlag === 'undefined') oogFlag = false;
 	
 		if(typeof grammarType == 'string' && typeof grammar == 'string') {
                 	gType = grammarType.toUpperCase();
                 	if ((gType == 'SIMPLE') || (gType == 'JSGF')) {
                     		if (grammar.length > 0) {
                         		speechapi.recognizerSetup = true;
-		        		document.getElementById(speechapi.containerID).setupRecognition(grammarType,grammar, automatic)
+		        		document.getElementById(speechapi.containerID).setupRecognition(grammarType,grammar, automatic, oogFlag);
                 		} else {
 		       			alert('Empty grammar string');
 				}
@@ -271,7 +279,7 @@ var speechapi = {
 
 
 	initMashupMode: function() {
-		speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false);
+		speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false,oog);
 		speechapi.makeTextClickable(speakables);
   		speechapi.setupFocus();
 	},

@@ -64,6 +64,8 @@ package com.spokentech {
 		private var username:String = null;
 		private var password:String = null;
 
+		private var oogBranchProb:String = "1e-25";
+		private var phoneProb:String = "1e-20";
 		private var recCallback:String;
 		private var ttsCallback:String;
 		private var vxmlCallback:String;
@@ -120,6 +122,7 @@ package com.spokentech {
 			if (ExternalInterface.available) {
 				ExternalInterface.addCallback("initFS", initFS);
 				ExternalInterface.addCallback("speak", speak);
+				ExternalInterface.addCallback("setOogParams", setOogParams);
 				ExternalInterface.addCallback("setupRecognition", setupRecognition);
 				ExternalInterface.addCallback("startRecognition", startRecognition);
 				ExternalInterface.addCallback("stopRecognition", stopRecognition);
@@ -152,6 +155,7 @@ package com.spokentech {
 			if (ExternalInterface.available) {
 				ExternalInterface.addCallback("initFS", initFS);
         			ExternalInterface.addCallback("setupRecognition", setupRecognition);
+				ExternalInterface.addCallback("setOogParams", setOogParams);
         			ExternalInterface.addCallback("startRecognition", startRecognition);
         			ExternalInterface.addCallback("stopRecognition", stopRecognition);
        				ExternalInterface.addCallback("speak", speak);
@@ -281,15 +285,24 @@ package com.spokentech {
 			}
 		}
 
+		public function setOogParams(oogBranchProb:String,phoneProb:String):void {
+			//TODO: Deal with RTMP mode
+			//if (http) {
+	    			httpSpeech.setOogParams(oogBranchProb,phoneProb);
+			//} else {
+			//}
+		}
 
-		public function setupRecognition(gmode:String,grammar:String, auto:Boolean):void {
+
+		public function setupRecognition(gmode:String,grammar:String, auto:Boolean, oog:Boolean):void {
 			if (http) {
 				//Logger.info("setupRecog method ",grammar); 
-	    			httpSpeech.setGmode(gmode)
-	    			httpSpeech.setGrammar(grammar)
+	    			httpSpeech.setGmode(gmode);
+	    			httpSpeech.setGrammar(grammar);
+	    			httpSpeech.setOog(oog);
 	    			if(auto) {
 					this.automatic=true;
-					startRecognition()
+					startRecognition();
 	    			}
 			} else {
 				var credentials:Array = new Array();
@@ -299,7 +312,9 @@ package com.spokentech {
 				grammarArray[0]=grammar;
 				grammarArray[1]=gmode;
 				this.automatic=auto;
+				//TODO: Deal with RTMP mode
 				nc.call("initializeSettings", null, credentials, grammarArray, auto, streamName);			
+				//nc.call("initializeSettings", null, credentials, grammarArray, auto, oog, streamName);
 				if(auto) {
 					automatic=true;
 					startRecognition()
