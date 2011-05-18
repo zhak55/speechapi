@@ -113,8 +113,8 @@ package com.spokentech {
 
 		private function initHttp():void {
 	
-			//Security.loadPolicyFile('http://spokentech.net/static/crossdomain.xml');
-			//Security.allowDomain('*');
+			//Security.loadPolicyFile('http://www.speechapi.com:8000/crossdomain.xml');
+			Security.allowDomain('*');
 			//Security.allowInsecureDomain('*');
 
 			httpSpeech = new HttpSpeech();
@@ -140,7 +140,7 @@ package com.spokentech {
 	  
 
 		private function initRtmp():void {
-			//Security.allowDomain("*");	
+			Security.allowDomain("*");	
 			nc = new NetConnection();
 			nc.client=this;
 			nc.connect(this.speechServer);
@@ -154,6 +154,7 @@ package com.spokentech {
 
 			if (ExternalInterface.available) {
 				ExternalInterface.addCallback("initFS", initFS);
+				//ExternalInterface.addCallback("initializeSettings", initializeSettings);
         			ExternalInterface.addCallback("setupRecognition", setupRecognition);
 				ExternalInterface.addCallback("setOogParams", setOogParams);
         			ExternalInterface.addCallback("startRecognition", startRecognition);
@@ -191,6 +192,7 @@ package com.spokentech {
 		//this method gets called by javascript during the initialization sequence after the flash is loaded
 		//TODO:  Document the sequence of events at init time.
 		public  function initFS(username:String, password:String, recCallback:String, ttsCallback:String):void { 
+		 	Logger.info("InitFS method: ",username); 
 	        	this.recCallback = recCallback;
 			this.ttsCallback = ttsCallback;
 			initCommon(username,password);
@@ -217,6 +219,7 @@ package com.spokentech {
 		private function initCommon(username:String, password:String):void {
 			this.username=username;
 	        	this.password = password;
+		 	Logger.info("InitCommon method: ",http); 
 			if (http) {
 				try {
 	        	  		httpSpeech.configure(username,password,recognitionComplete,ttsComplete,speechServer,micActivityCallbackHttp);
@@ -294,17 +297,19 @@ package com.spokentech {
 		}
 
 
-		public function setupRecognition(gmode:String,grammar:String, auto:Boolean, oog:Boolean):void {
+		public function setupRecognition(gmode:String,grammar:String, auto:Boolean, language:String, oog:Boolean):void {
 			if (http) {
-				//Logger.info("setupRecog method ",grammar); 
+				Logger.info("setupRecog method ",grammar); 
 	    			httpSpeech.setGmode(gmode);
 	    			httpSpeech.setGrammar(grammar);
 	    			httpSpeech.setOog(oog);
+	    			httpSpeech.setLanguage(language);
 	    			if(auto) {
 					this.automatic=true;
 					startRecognition();
 	    			}
 			} else {
+				Logger.info("rtmp setupRecog method ",grammar); 
 				var credentials:Array = new Array();
 				credentials[0]=username;
 				credentials[1]=password;
@@ -312,9 +317,9 @@ package com.spokentech {
 				grammarArray[0]=grammar;
 				grammarArray[1]=gmode;
 				this.automatic=auto;
-				//TODO: Deal with RTMP mode
+				//TODO: Deal with RTMP mode for oog and langauge
 				nc.call("initializeSettings", null, credentials, grammarArray, auto, streamName);			
-				//nc.call("initializeSettings", null, credentials, grammarArray, auto, oog, streamName);
+				//nc.call("initializeSettings", null, credentials, grammarArray, auto,language, oog, streamName);
 				if(auto) {
 					automatic=true;
 					startRecognition()
@@ -324,7 +329,7 @@ package com.spokentech {
 
 		public function startRecognition():void {
 			if (http) {
-	    			//Logger.info("startRecognition","hello"); 
+	    			Logger.info("startRecognition","hello"); 
 				httpSpeech.startMicRecording();
 	    			speechTimer = new Timer(15000, 1);
 	    			speechTimer.addEventListener(TimerEvent.TIMER, timeOutRecRequest);
@@ -339,7 +344,7 @@ package com.spokentech {
 
 		public function stopRecognition():void {
 			if (http) {
-				//Logger.info("stopRecognition","hello"); 
+				Logger.info("stopRecognition","hello"); 
 	    			httpSpeech.stopMicRecording();
 	    			speechTimer.stop();
 			} else {

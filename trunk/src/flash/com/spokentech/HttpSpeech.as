@@ -68,6 +68,7 @@ package com.spokentech {
 		private var grammar:String;	
 		private var gData:ByteArray;	
 	        private var autoRecMode:Boolean = false;
+		private var language:String= "en";
 		private var oog:Boolean = false;
 		private var oogBranchProb:String = "1e-25";
 		private var phoneProb:String = "1e-20";
@@ -82,7 +83,7 @@ package com.spokentech {
 		}	
 
 		public function configure(username:String,password:String,recCallback:Function,ttsCallback:Function, serviceNamePort:String,micActivityCallback:Function):void {
-	 		//Logger.info("configure method",serviceNamePort); 
+	 		Logger.info("configure method",serviceNamePort); 
 
 			this.username = username;
 			this.password = password;
@@ -112,6 +113,10 @@ package com.spokentech {
                         }
 		}
 			
+		public function setLanguage(language:String):void {
+			this.language = language;
+		}
+
 		public function setOog(oog:Boolean):void {
 			this.oog = oog;
 		}
@@ -123,6 +128,7 @@ package com.spokentech {
 
 
 		public function setGrammar(grammar:String):void {
+			Logger.info( "httpspeech.setGrammar" , grammar );    
 			this.grammar = grammar;
                         this.gData = new ByteArray();
                         this.gData.writeUTFBytes(this.grammar);
@@ -136,7 +142,7 @@ package com.spokentech {
 			
 		protected function setupMicrophone(selectedMic:int):void {
 			//microphone = Microphone.getMicrophone(comboMicList.selectedIndex);
-			microphone = Microphone.getMicrophone(selectedMic);
+			microphone = Microphone.getMicrophone();
             		Security.showSettings(SecurityPanel.PRIVACY);
 
 			microphone.rate = 16;
@@ -166,7 +172,7 @@ package com.spokentech {
 			micDetails += "Silence timeout: " + microphone.silenceTimeout + '\n'; 
 			micDetails += "Echo suppression: " + microphone.useEchoSuppression + '\n'; 
 			//Alert.show("httpspeech.setupMic()",micDetails); 
-			//Logger.info("httpspeech.setupMic()",micDetails); 
+			Logger.info("httpspeech.setupMic()",micDetails); 
 		}
  
  
@@ -202,7 +208,7 @@ package com.spokentech {
 
 			
 		public function startMicRecording():void {
-    		    //Logger.info("HttpSpeech.as", "start recording");
+    		    Logger.info("HttpSpeech.as", "start recording");
 		        position = 0;
 			isRecording = true;
 			bufferCount=0;
@@ -211,7 +217,7 @@ package com.spokentech {
 		}
 			
 		public function stopMicRecording():void {
-    	    		//Logger.info("HttpSpeech.as", "stop recording");
+    	    		Logger.info("HttpSpeech.as", "stop recording");
 			isRecording = false;
 			microphone.removeEventListener(SampleDataEvent.SAMPLE_DATA, gotMicData);
 			recognize();
@@ -227,7 +233,7 @@ package com.spokentech {
 		public function recognize():void  {
 
 			//Alert.show(recUrl);
-	 		//Logger.info("recognize method ",recUrl); 
+	 		Logger.info("recognize method ",recUrl); 
 			soundRecording.position=0;
                 	var ml:MultipartURLLoader = new MultipartURLLoader();
 			ml.addEventListener(Event.COMPLETE, onReady);
@@ -235,12 +241,12 @@ package com.spokentech {
 			ml.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, recComplete);
  
 			function recComplete(e:DataEvent):void {
-				//Logger.info("recognize", "rec result: "+e.data);
+				Logger.info("recognize", "rec result: "+e.data);
 				recCallback(e.data);
                         }
 
 			function onReady(e:Event):void {
-				//Logger.info("recognize", "complete: "+e);
+				Logger.info("recognize", "complete: "+e);
 			}
 
 			//ml.addVariable('lmFlag', 'true');
@@ -254,6 +260,7 @@ package com.spokentech {
 			ml.addVariable('bigEndian', 'false');
 			ml.addVariable('bytesPerValue', '2');
 			ml.addVariable('detectOOG', oog);
+			ml.addVariable('language', language);
 			ml.addVariable('oogBranchProb',oogBranchProb );
 			ml.addVariable('phoneInsertionProb',phoneProb );
  
@@ -267,10 +274,11 @@ package com.spokentech {
 			wavWriter.samplingRate = 16000;
 			wavWriter.processSamples(data, soundRecording, 16000, 1, true); 
 
-			//Logger.info( "httpspeech.recognize" , data.length+ " bytes" );    
 			if (gMode != "lm") {
+				Logger.info( "httpspeech.recognize" , gData );    
 				ml.addFile(gData, 'grammar', 'grammar', 'plain/text');
 			}
+			Logger.info( "httpspeech.recognize" , data.length+ " bytes" );    
 			ml.addFile(data, 'audio', 'audio', 'audio/x-wav');
 			ml.load(recUrl)
 
@@ -283,7 +291,7 @@ package com.spokentech {
 			//Alert.show(ttsUrl);
 			//Alert.show(text);
 			//Alert.show(speaker);
-	 		//Logger.info("playAudio method ",ttsUrl); 
+	 		Logger.info("playAudio method ",ttsUrl); 
 			var myRequest:URLRequest = new URLRequest(ttsUrl);
 			var myVariables:URLVariables = new URLVariables();
                         //var myLoader:URLLoader = new URLLoader();

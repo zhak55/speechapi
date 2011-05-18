@@ -19,6 +19,8 @@
 	import flash.utils.setTimeout;
 	import flash.utils.clearInterval;
 	import ru.inspirit.net.events.MultipartURLLoaderEvent;
+	import org.osflash.thunderbolt.Logger;
+
 
 	/**
 	 * Multipart URL Loader
@@ -470,6 +472,7 @@
 
 		private function onHTTPStatus( event: HTTPStatusEvent ): void
 		{
+	 		//Logger.info("HTTP Status",event.toString()); 
 			dispatchEvent( event );
 		}
 

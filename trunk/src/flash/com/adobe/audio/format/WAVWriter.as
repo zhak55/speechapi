@@ -150,7 +150,7 @@ public class WAVWriter
 	 *  @param inputNumChannels	The number of audio changes in <code>dataInput</code> data.
 	 *  	
 	 */
-	public function processSamples(dataOutput:IDataOutput, dataInput:ByteArray, inputSamplingRate:int, inputNumChannels:int = 1, raw:Boolean=false):void
+	public function processSamples(dataOutput:IDataOutput, dataInput:ByteArray, inputSamplingRate:int, inputNumChannels:int = 1, raw:Boolean = false):void
 	{
 		if (!dataInput || dataInput.bytesAvailable <= 0) // Return if null
 			return;  //throw new Error("No audio data");
@@ -165,13 +165,13 @@ public class WAVWriter
 		// WAV format requires little-endian
 		dataOutput.endian = Endian.LITTLE_ENDIAN;  
 
-		if (raw == false) {
-			// RIFF WAVE Header Information
-			header(dataOutput, fileSize);
-			// Data Chunk Header
-			dataOutput.writeUTFBytes("data");
-			dataOutput.writeUnsignedInt(dataByteLength); // Size of whole file
-		}
+		//if (raw == false) {
+		//	// RIFF WAVE Header Information
+		//	header(dataOutput, fileSize);
+		//	// Data Chunk Header
+		//	dataOutput.writeUTFBytes("data");
+		//	dataOutput.writeUnsignedInt(dataByteLength); // Size of whole file
+		//}
 		
 		// Write data to file
 		dataInput.position = 0;
