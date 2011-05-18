@@ -88,7 +88,7 @@ var speechapi = {
    			for (var k in result.ruleMatches) {
 	   			speechapi.processRule2(result.ruleMatches[k]._rule,result.ruleMatches[k]._tag,result.text); 
    			}
-   			speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false,oog);
+   			speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false,speechapi.language,speechapi.oog);
 		}
 
         	if (result == null) {
@@ -153,27 +153,33 @@ var speechapi = {
 		document.getElementById(speechapi.containerID).setOogParms(oogBranchProb, phoneProb);
 	},
 
-	setupRecognition: function(grammarType, grammar, automatic, oogFlag) {
+	setupRecognition: function(grammarType, grammar, automatic, language, oogFlag) {
 		speechapi.oog = oogFlag;
+		speechapi.language =language;
 
 		if (typeof automatic === 'undefined') automatic = speechapi.automatic;
 
 		if (typeof oogFlag === 'undefined') oogFlag = false;
+		
+		if (typeof language === 'undefined')  language ="en";
 	
-		if(typeof grammarType == 'string' && typeof grammar == 'string') {
+		if(typeof grammarType == 'string') {
                 	gType = grammarType.toUpperCase();
-                	if ((gType == 'SIMPLE') || (gType == 'JSGF')) {
-                    		if (grammar.length > 0) {
+                	if ((gType == 'SIMPLE') || (gType == 'JSGF') ) {
+		                if ((typeof grammar == 'string') &&(grammar.length > 0)) {
                         		speechapi.recognizerSetup = true;
-		        		document.getElementById(speechapi.containerID).setupRecognition(grammarType,grammar, automatic, oogFlag);
+		        		document.getElementById(speechapi.containerID).setupRecognition(grammarType,grammar, automatic, language, oogFlag);
                 		} else {
 		       			alert('Empty grammar string');
 				}
+			} else if (gType == "LM") {
+                        	speechapi.recognizerSetup = true;
+		        	document.getElementById(speechapi.containerID).setupRecognition(grammarType,grammar, automatic, language, oogFlag);
                 	} else {
 		   		alert('Invalid grammar type '+grammarType);
                 	}
 		} else {
-			alert('Grammar mode and/or string must be a string.');
+			alert('Grammar type must be a string.');
 		}	
 	},
 
@@ -279,7 +285,7 @@ var speechapi = {
 
 
 	initMashupMode: function() {
-		speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false,oog);
+		speechapi.setupRecognition("JSGF", speechapi.generateGrammar(),false,speechapi.language,speechapi.oog);
 		speechapi.makeTextClickable(speakables);
   		speechapi.setupFocus();
 	},
