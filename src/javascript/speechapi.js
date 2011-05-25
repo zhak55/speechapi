@@ -149,7 +149,7 @@ var speechapi = {
 		}
 	},
 
-	setOogParms: function(oogBranchProb, phoneProb ) {
+	setOogParams: function(oogBranchProb, phoneProb ) {
 		document.getElementById(speechapi.containerID).setOogParms(oogBranchProb, phoneProb);
 	},
 
