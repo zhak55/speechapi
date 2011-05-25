@@ -234,6 +234,7 @@ package com.spokentech {
 
 			//Alert.show(recUrl);
 	 		Logger.info("recognize method ",recUrl); 
+	 		Logger.info("Oog",oog); 
 			soundRecording.position=0;
                 	var ml:MultipartURLLoader = new MultipartURLLoader();
 			ml.addEventListener(Event.COMPLETE, onReady);
@@ -346,7 +347,7 @@ package com.spokentech {
 				 
 		}
 
-		function onLoadComplete(event:Event):void {
+		public function onLoadComplete(event:Event):void {
 				//Alert.show(event.toString());
 		    //var localSound:Sound = event.target as Sound;
 		    //localSound.play();

@@ -114,7 +114,6 @@ package com.spokentech {
 		private function initHttp():void {
 	
 			//Security.loadPolicyFile('http://www.speechapi.com:8000/crossdomain.xml');
-			Security.allowDomain('*');
 			//Security.allowInsecureDomain('*');
 
 			httpSpeech = new HttpSpeech();
@@ -140,7 +139,6 @@ package com.spokentech {
 	  
 
 		private function initRtmp():void {
-			Security.allowDomain("*");	
 			nc = new NetConnection();
 			nc.client=this;
 			nc.connect(this.speechServer);
@@ -193,6 +191,7 @@ package com.spokentech {
 		//TODO:  Document the sequence of events at init time.
 		public  function initFS(username:String, password:String, recCallback:String, ttsCallback:String):void { 
 		 	Logger.info("InitFS method: ",username); 
+			Security.allowDomain("*");	
 	        	this.recCallback = recCallback;
 			this.ttsCallback = ttsCallback;
 			initCommon(username,password);
@@ -300,6 +299,8 @@ package com.spokentech {
 		public function setupRecognition(gmode:String,grammar:String, auto:Boolean, language:String, oog:Boolean):void {
 			if (http) {
 				Logger.info("setupRecog method ",grammar); 
+	 			Logger.info("Oog",oog); 
+
 	    			httpSpeech.setGmode(gmode);
 	    			httpSpeech.setGrammar(grammar);
 	    			httpSpeech.setOog(oog);
@@ -359,10 +360,15 @@ package com.spokentech {
 		}
 
 		public function recognitionComplete(results:String):void {
-
-			var resultObj:Object = JSON.decode(results) ;
-			if (resultObj.rCode != "Success") {
-		      	resultObj.text = "Recognition Error";
+			var resultObj:Object;
+			if (results) {
+				resultObj= JSON.decode(results) ;
+				if (resultObj.rCode != "Success") {
+		      			resultObj.text = "Recognition Error";
+				}
+			} else {
+			   resultObj = new Object();
+			   resultObj.text = "Recogizer error";
 			}
 	    		if (ExternalInterface.available) {
 				ExternalInterface.call(recCallback, resultObj); 

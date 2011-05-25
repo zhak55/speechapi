@@ -65,7 +65,9 @@
 	   var auto:Boolean = false;
 		var grammar:String="one,two,three,four,five,six,seven,eight,nine,ten" ;
 		var gMode:String = "simple";
-	 	speechapi.setupRecognition(gMode, grammar, auto);
+		var language:String = "en";
+		var oog:Boolean = false;
+	 	speechapi.setupRecognition(gMode, grammar, auto, language, oog);
 	    trace("start");
 	    Logger.info("start!");
 	    speechapi.startRecognition();
